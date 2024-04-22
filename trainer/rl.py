@@ -12,7 +12,7 @@ from peft import LoraConfig
 from tqdm import tqdm
 from transformers import AutoTokenizer, HfArgumentParser, pipeline
 
-from trl import AutoModelForCausalLMWithValueHead, AutoModelForSeq2SeqLMWithValueHead, PPOConfig, PPOTrainer, set_seed
+from trl import AutoModelForSeq2SeqLMWithValueHead, PPOConfig, PPOTrainer, set_seed
 from trl.core import LengthSampler
 
 
@@ -21,7 +21,6 @@ tqdm.pandas()
 
 @dataclass
 class ScriptArguments:
-    use_seq2seq: bool = field(default=False, metadata={"help": "whether to use seq2seq"})
     trust_remote_code: bool = field(default=False, metadata={"help": "Enable `trust_remote_code`"})
 
     # LoraConfig
@@ -37,7 +36,7 @@ args, ppo_config = parser.parse_args_into_dataclasses()
 # We set `return_all_scores` to True to get the sentiment score for each token.
 sent_kwargs = {"return_all_scores": True, "function_to_apply": "none", "batch_size": 16}
 
-trl_model_class = AutoModelForCausalLMWithValueHead if not args.use_seq2seq else AutoModelForSeq2SeqLMWithValueHead
+trl_model_class = AutoModelForSeq2SeqLMWithValueHead
 
 
 # Below is an example function to build the dataset. In our case, we use the IMDB dataset
