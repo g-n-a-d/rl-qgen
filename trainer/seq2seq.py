@@ -26,7 +26,7 @@ from transformers.utils import check_min_version, is_offline_mode, send_example_
 from transformers.utils.versions import require_version
 
 from arguments import ModelArguments, DataTrainingArguments
-from utils.data_utils import make_prompt
+from ..utils.data_utils import make_prompt
 
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
