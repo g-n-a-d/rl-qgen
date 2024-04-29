@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+sys.path.insert(1, os.path.abspath(os.path.join(os.getcwd(), os.pardir)))
 import warnings
 
 import datasets
