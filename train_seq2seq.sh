@@ -18,7 +18,7 @@ accelerate launch \
     --eval_steps 400 \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 1 \
+    --gradient_accumulation_steps 2 \
     --learning_rate 3e-4 \
     --num_train_epochs 8 \
     --logging_strategy steps \
