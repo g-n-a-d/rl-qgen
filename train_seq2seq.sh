@@ -26,7 +26,7 @@ accelerate launch \
     --logging_strategy steps \
     --logging_steps 25 \
     --save_strategy steps \
-    --save_step 25 \
+    --save_step 400 \
     --save_total_limit 5 \
     --load_best_model_at_end True \
     --predict_with_generate True
