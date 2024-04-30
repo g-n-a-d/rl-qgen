@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export WANDB_DISABLED=true
-
 accelerate launch \
     --config_file=config/multi_gpu.yaml \
     trainer/seq2seq.py \
@@ -29,4 +27,5 @@ accelerate launch \
     --save_step 400 \
     --save_total_limit 5 \
     --load_best_model_at_end True \
+    --report_to none \
     --predict_with_generate True
