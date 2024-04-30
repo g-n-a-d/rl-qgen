@@ -99,15 +99,9 @@ def main():
     )
     logger.info(f"Training/evaluation parameters {training_args}")
 
-    if data_args.source_prefix is None and model_args.model_name_or_path in [
-        "google-t5/t5-small",
-        "google-t5/t5-base",
-        "google-t5/t5-large",
-        "google-t5/t5-3b",
-        "google-t5/t5-11b",
-    ]:
+    if data_args.source_prefix is None:
         logger.warning(
-            "You're running a t5 model but didn't provide a source prefix, which is the expected, e.g. with "
+            "You didn't provide a source prefix, which is the expected, e.g. with "
             "`--source_prefix 'generate: ' `"
         )
 
