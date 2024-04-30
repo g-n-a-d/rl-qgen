@@ -23,7 +23,7 @@ from transformers import (
     set_seed,
 )
 from transformers.trainer_utils import get_last_checkpoint
-from transformers.utils import check_min_version, is_offline_mode, send_example_telemetry
+from transformers.utils import is_offline_mode, send_example_telemetry
 from transformers.utils.versions import require_version
 
 from arguments import ModelArguments, DataTrainingArguments
@@ -31,7 +31,7 @@ from utils.data_utils import make_prompt
 
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
-#check_min_version("4.41.0.dev0")
+#check_min_version("4.39.0")
 
 require_version("datasets>=1.8.0", "To fix: pip install -r requirements.txt")
 
