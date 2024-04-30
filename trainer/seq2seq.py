@@ -158,7 +158,7 @@ def main():
         if data_args.test_file is not None:
             data_files["test"] = data_args.test_file
             extension = data_args.test_file.split(".")[-1]
-        extension = "json" if extension == "jsonl"
+        extension = "json" if extension == "jsonl" else extension
         raw_datasets = load_dataset(
             extension,
             data_files=data_files,
