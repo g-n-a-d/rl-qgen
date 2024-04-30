@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export WANDB_DISABLED=true
+
 accelerate launch \
     --config_file=config/multi_gpu.yaml \
     trainer/seq2seq.py \
