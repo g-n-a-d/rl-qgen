@@ -13,8 +13,8 @@ def load_args():
     return agrs
 
 def load_model(model_name_or_path, token):
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, token)  
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path, token)
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, token=token)  
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path, token=token)
     return model, tokenizer
 
 def infer(model, tokenizer, context, answer):
