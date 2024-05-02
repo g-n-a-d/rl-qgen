@@ -1,6 +1,6 @@
-import argparse
 import jsonlines
 from rouge_score import rouge_scorer
+import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--eval_filename", type=str, default="eval.jsonl", help="Evaluation filename formatted in jsonl")
