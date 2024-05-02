@@ -15,6 +15,7 @@ def load_args():
 def load_model(model_name_or_path, token):
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, token=token)  
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path, token=token)
+
     return model, tokenizer
 
 def infer(model, tokenizer, context, answer):
@@ -22,6 +23,7 @@ def infer(model, tokenizer, context, answer):
     inputs = tokenizer(prompt, return_tensors="pt")
     output = model.generate(**inputs)
     output_text = tokenizer.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    
     return output_text
 
 def run_demo():
@@ -29,6 +31,7 @@ def run_demo():
 
     model, tokenizer = load_model(model_name_or_path=agrs.model_name_or_path, token=agrs.token)
     pipe = lambda context, answer : infer(model=model, tokenizer=tokenizer, context=context, answer=answer)
+
     demo = gr.Interface(
         fn=pipe,
         inputs=[
