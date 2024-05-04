@@ -1,14 +1,17 @@
+import os
+import sys
+sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
+
 import gradio as gr
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, HfArgumentParser
 import argparse
 
+from trainer.arguments import ModelArguments
 from data_utils import make_prompt
 
 def load_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name_or_path", type=str, help="Path to pretrained model or model identifier from huggingface.co/models")
-    parser.add_argument("--token", type=str, help="Huggingface token to access model")
-    agrs = parser.parse_args()
+    parser = HfArgumentParser(ModelArguments)
+    agrs = parser.parse_args_into_dataclasses()
     
     return agrs
 
