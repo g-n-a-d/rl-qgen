@@ -1,36 +1,114 @@
-"""
-python examples/scripts/ppo.py \
-    --log_with=wandb
-"""
+import logging
+import os
+import sys
+sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
+
 from dataclasses import dataclass, field
 from typing import Optional
+
+import datasets
 
 import torch
 from accelerate import Accelerator
 from datasets import load_dataset
 from peft import LoraConfig
 from tqdm import tqdm
+import transformers
 from transformers import AutoTokenizer, HfArgumentParser, pipeline
 
 from trl import AutoModelForSeq2SeqLMWithValueHead, PPOConfig, PPOTrainer, set_seed
 from trl.core import LengthSampler
 
+from arguments import ModelArguments, DataTrainingArguments
+from utils.data_utils import make_prompt
+
 
 tqdm.pandas()
 
 
+logger = logging.getLogger(__name__)
+
+
 @dataclass
 class ScriptArguments:
-    trust_remote_code: bool = field(default=False, metadata={"help": "Enable `trust_remote_code`"})
+    """
+    Arguments pertaining to which reward model/peft/generation we are going to fine-tune from.
+    """
 
-    # LoraConfig
-    use_peft: bool = field(default=False, metadata={"help": "whether to use peft"})
-    lora_alpha: Optional[float] = field(default=16, metadata={"help": "the lora alpha parameter"})
-    lora_r: Optional[int] = field(default=16, metadata={"help": "the lora r parameter"})
+    reward_task: str = field(
+        metadata={"help": "The specific task for reward model."}
+    )
+
+    reward_model_name_or_path: str = field(
+        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+    )
+
+    #Lora config
+    use_peft: bool = field(
+        default=False, metadata={"help": "whether to use peft"}
+    )
+
+    lora_alpha: Optional[float] = field(
+        default=16, metadata={"help": "the lora alpha parameter"}
+    )
+
+    lora_r: Optional[int] = field(
+        default=16, metadata={"help": "the lora r parameter"}
+    )
+
+"min_length": -1,
+    "top_k": 0.0,
+    "top_p": 1.0,
+    "do_sample": True,
+    "pad_token_id": tokenizer.eos_token_id,
+    "max_new_tokens": 32,
+
+    #Generation config
+    min_length: int = field(
+        default=-1, metadata={"help": ""}
+    )
+
+    top_k: Optional[float] = field(
+        default=16, metadata={"help": "the lora alpha parameter"}
+    )
+
+    top_p: Optional[int] = field(
+        default=16, metadata={"help": "the lora r parameter"}
+    )
+
+    do_sample: bool = field(
+        default=16, metadata={"help": "whether to sample"}
+    )
+
+    top_p: Optional[int] = field(
+        default=16, metadata={"help": "the lora r parameter"}
+    )
+
+    top_p: Optional[int] = field(
+        default=16, metadata={"help": "the lora r parameter"}
+    )
 
 
-parser = HfArgumentParser((ScriptArguments, PPOConfig))
-args, ppo_config = parser.parse_args_into_dataclasses()
+parser = HfArgumentParser((ScriptArguments, ModelArguments, DataTrainingArguments, PPOConfig))
+script_args, model_args, data_args, ppo_config = parser.parse_args_into_dataclasses()
+
+
+# Setup logging
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+
+# Log on each process:
+logger.info(f"Training parameters {ppo_config}")
+
+if data_args.source_prefix is None:
+    logger.warning(
+        "You didn't provide a source prefix, which is the expected, e.g. with "
+        "`--source_prefix 'generate: ' `"
+    )
+
 
 # We then define the arguments to pass to the sentiment analysis pipeline.
 # We set `return_all_scores` to True to get the sentiment score for each token.
@@ -39,13 +117,99 @@ sent_kwargs = {"return_all_scores": True, "function_to_apply": "none", "batch_si
 trl_model_class = AutoModelForSeq2SeqLMWithValueHead
 
 
-# Below is an example function to build the dataset. In our case, we use the IMDB dataset
-# from the `datasets` library. One should customize this function to train the model on
-# its own dataset.
-def build_dataset(config, query_dataset, input_min_text_length=2, input_max_text_length=8):
+# download the raw dataset.
+if data_args.dataset_name is not None:
+    # Downloading and loading a dataset from the hub.
+    raw_ds = load_dataset(
+        data_args.dataset_name,
+        data_args.dataset_config_name,
+        cache_dir=model_args.cache_dir,
+        token=model_args.token,
+    )
+else:
+    data_files = {}
+    if data_args.train_file is not None:
+        data_files["train"] = data_args.train_file
+        extension = data_args.train_file.split(".")[-1]
+    extension = "json" if extension == "jsonl" else extension
+    raw_ds = load_dataset(
+        extension,
+        data_files=data_files,
+        cache_dir=model_args.cache_dir,
+        token=model_args.token,
+    )
+column_names = raw_ds["train"].column_names
+
+
+# Get the column names for input/target.
+dataset_columns = ("context", "question", "answer")
+if data_args.context_column is None:
+    context_column = dataset_columns[0] if dataset_columns is not None else column_names[0]
+else:
+    context_column = data_args.context_column
+    if context_column not in column_names:
+        raise ValueError(
+            f"--context_column' value '{data_args.context_column}' needs to be one of: {', '.join(column_names)}"
+        )
+if data_args.question_column is None:
+    question_column = dataset_columns[1] if dataset_columns is not None else column_names[1]
+else:
+    question_column = data_args.question_column
+    if question_column not in column_names:
+        raise ValueError(
+            f"--question_column' value '{data_args.question_column}' needs to be one of: {', '.join(column_names)}"
+        )
+if data_args.answer_column is None:
+    answer_column = dataset_columns[2] if dataset_columns is not None else column_names[2]
+else:
+    answer_column = data_args.answer_column
+    if answer_column not in column_names:
+        raise ValueError(
+            f"--answer_column' value '{data_args.answer_column}' needs to be one of: {', '.join(column_names)}"
+        )
+
+
+# set seed before initializing value head for deterministic eval
+set_seed(ppo_config.seed)
+
+# Now let's build the model, the reference model, and the tokenizer.
+if not script_args.use_peft:
+    ref_model = trl_model_class.from_pretrained(ppo_config.model_name, trust_remote_code=model_args.trust_remote_code)
+    device_map = None
+    peft_config = None
+else:
+    peft_config = LoraConfig(
+        r=script_args.lora_r,
+        lora_alpha=script_args.lora_alpha,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+    ref_model = None
+    # Copy the model to each device
+    device_map = {"": Accelerator().local_process_index}
+
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+    cache_dir=model_args.cache_dir,
+    use_fast=model_args.use_fast_tokenizer,
+    revision=model_args.model_revision,
+    token=model_args.token,
+    trust_remote_code=model_args.trust_remote_code,
+)
+model = trl_model_class.from_pretrained(
+    model_args.model_name_or_path,
+    trust_remote_code=model_args.trust_remote_code,
+    device_map=device_map,
+    peft_config=peft_config,
+)
+
+
+# One should customize this function to train the model on its own dataset.
+def build_dataset(model_args, data_args, input_min_text_length=2, input_max_text_length=8):
     """
-    Build dataset for training. This builds the dataset from `load_dataset`, one should
-    customize this function to train the model on its own dataset.
+    Build dataset for training. One should customize this function
+    to train the model on its own dataset.
 
     Args:
         query_dataset (`str`):
@@ -55,61 +219,43 @@ def build_dataset(config, query_dataset, input_min_text_length=2, input_max_text
         dataloader (`torch.utils.data.DataLoader`):
             The dataloader for the dataset.
     """
-    tokenizer = AutoTokenizer.from_pretrained(config.model_name)
-    tokenizer.pad_token = tokenizer.eos_token
-    # load imdb with datasets
-    ds = load_dataset(query_dataset, split="train")
-    ds = ds.rename_columns({"text": "review"})
-    ds = ds.filter(lambda x: len(x["review"]) > 200, batched=False)
 
-    input_size = LengthSampler(input_min_text_length, input_max_text_length)
+    def preprocess_function(examples):
+        # remove pairs where at least one record is None
 
-    def tokenize(sample):
-        sample["input_ids"] = tokenizer.encode(sample["review"])[: input_size()]
-        sample["query"] = tokenizer.decode(sample["input_ids"])
-        return sample
+        inputs = []
+        for i in range(len(examples[context_column])):
+            if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
+                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i]))
 
-    ds = ds.map(tokenize, batched=False)
-    ds.set_format(type="torch")
+        inputs = [data_args.prefix + inp for inp in inputs]
+        model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
+
+        # If we are padding here, replace all tokenizer.pad_token_id in the labels by -100 when we want to ignore
+        # padding in the loss.
+        if padding == "max_length" and data_args.ignore_pad_token_for_loss:
+            labels["input_ids"] = [
+                [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
+            ]
+
+        return model_inputs
+
+    ds = raw_ds.map(
+        batched=True,
+        num_proc=data_args.preprocessing_num_workers,
+        remove_columns=column_names,
+        load_from_cache_file=not data_args.overwrite_cache,
+        desc="Running tokenizer on train dataset",
+    )
+
     return ds
 
-
 # We retrieve the dataloader by calling the `build_dataset` function.
-dataset = build_dataset(ppo_config, ppo_config.query_dataset)
-
+dataset = build_dataset(model_args, data_args)
 
 def collator(data):
     return {key: [d[key] for d in data] for key in data[0]}
 
-
-# set seed before initializing value head for deterministic eval
-set_seed(ppo_config.seed)
-
-# Now let's build the model, the reference model, and the tokenizer.
-if not args.use_peft:
-    ref_model = trl_model_class.from_pretrained(ppo_config.model_name, trust_remote_code=args.trust_remote_code)
-    device_map = None
-    peft_config = None
-else:
-    peft_config = LoraConfig(
-        r=args.lora_r,
-        lora_alpha=args.lora_alpha,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-    ref_model = None
-    # Copy the model to each device
-    device_map = {"": Accelerator().local_process_index}
-
-model = trl_model_class.from_pretrained(
-    ppo_config.model_name,
-    trust_remote_code=args.trust_remote_code,
-    device_map=device_map,
-    peft_config=peft_config,
-)
-
-
-tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
 
 # Some tokenizers like GPT-2's don't have a padding token by default, so we set one here.
 tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -155,7 +301,10 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
 
     # Get response from model
     response_tensors, ref_response_tensors = ppo_trainer.generate(
-        query_tensors, return_prompt=False, generate_ref_response=True, **generation_kwargs
+        query_tensors,
+        return_prompt=False,
+        generate_ref_response=True,
+        **generation_kwargs
     )
     batch["response"] = tokenizer.batch_decode(response_tensors)
     batch["ref_response"] = tokenizer.batch_decode(ref_response_tensors)

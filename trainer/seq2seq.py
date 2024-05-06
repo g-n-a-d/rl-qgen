@@ -301,6 +301,7 @@ def main():
             ]
 
         model_inputs["labels"] = labels["input_ids"]
+
         return model_inputs
 
     if training_args.do_train:
@@ -389,6 +390,7 @@ def main():
         result = {k: round(v * 100, 4) for k, v in result.items()}
         prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in preds]
         result["gen_len"] = np.mean(prediction_lens)
+        
         return result
 
     # Override the decoding parameters of Seq2SeqTrainer

@@ -11,9 +11,9 @@ from data_utils import make_prompt
 
 def load_args():
     parser = HfArgumentParser(ModelArguments)
-    agrs = parser.parse_args_into_dataclasses()
+    args = parser.parse_args_into_dataclasses()
     
-    return agrs
+    return args
 
 def load_model(model_name_or_path, token):
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, token=token)  
@@ -30,9 +30,9 @@ def infer(model, tokenizer, context, answer):
     return output_text
 
 def run_demo():
-    agrs = load_args()
+    model_args = load_args()
 
-    model, tokenizer = load_model(model_name_or_path=agrs.model_name_or_path, token=agrs.token)
+    model, tokenizer = load_model(model_name_or_path=model_args.model_name_or_path, token=model_args.token)
     pipe = lambda context, answer : infer(model=model, tokenizer=tokenizer, context=context, answer=answer)
 
     demo = gr.Interface(
