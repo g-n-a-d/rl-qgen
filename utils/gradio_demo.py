@@ -24,7 +24,7 @@ def load_model(model_name_or_path, token):
 def infer(model, tokenizer, context, answer, **gen_config):
     prompt = make_prompt(context=context, answer=answer)
     inputs = tokenizer(prompt, return_tensors="pt")
-    output = model.generate(**inputs, do_sample=True, num_return_sequences=10, **gen_config)
+    output = model.generate(**inputs, do_sample=True, num_return_sequences=10, min_new_tokens=1, max_new_tokens=32, **gen_config)
     output_text = "\n".join([tokenizer.decode(output[i], skip_special_tokens=True, clean_up_tokenization_spaces=True) for i in range(10)])
     
     return output_text
