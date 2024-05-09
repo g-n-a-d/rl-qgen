@@ -21,11 +21,11 @@ def load_model(model_name_or_path, token):
 
     return model, tokenizer
 
-def infer(model, tokenizer, context, answer):
+def infer(model, tokenizer, context, answer, **gen_config):
     prompt = make_prompt(context=context, answer=answer)
     inputs = tokenizer(prompt, return_tensors="pt")
-    output = model.generate(**inputs)
-    output_text = tokenizer.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    output = model.generate(**inputs, do_sample=True, num_return_sequences=10, **gen_config)
+    output_text = "\n".join([tokenizer.decode(output[i], skip_special_tokens=True, clean_up_tokenization_spaces=True) for i in range(10)])
     
     return output_text
 
@@ -33,7 +33,7 @@ def run_demo():
     model_args = load_args()
 
     model, tokenizer = load_model(model_name_or_path=model_args.model_name_or_path, token=model_args.token)
-    pipe = lambda context, answer : infer(model=model, tokenizer=tokenizer, context=context, answer=answer)
+    pipe = lambda context, answer, **gen_config : infer(model=model, tokenizer=tokenizer, context=context, answer=answer, **gen_config)
 
     demo = gr.Interface(
         fn=pipe,
@@ -47,7 +47,8 @@ def run_demo():
                 value="Chiến tranh thế giới thứ nhất và Cách mạng Đức 1918-1919",
                 label="Answer",
                 lines=2
-            )
+            ),
+            gr.inputs.Slider(0.1, 1, step=0.1, label='Top-p', default=0.9)
         ],
         outputs=gr.Textbox(label="Question", lines=3)
     )

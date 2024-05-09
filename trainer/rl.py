@@ -19,7 +19,7 @@ from transformers import AutoTokenizer, HfArgumentParser, pipeline
 from trl import AutoModelForSeq2SeqLMWithValueHead, PPOConfig, PPOTrainer, set_seed
 from trl.core import LengthSampler
 
-from arguments import ModelArguments, DataTrainingArguments
+from arguments import ModelArguments, DataTrainingArguments, GenerationArguments
 from utils.data_utils import make_prompt
 
 
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ScriptArguments:
     """
-    Arguments pertaining to which reward model/peft/generation we are going to fine-tune from.
+    Arguments pertaining to which reward_model/peft we are going to fine-tune from.
     """
 
     reward_task: str = field(
@@ -40,57 +40,19 @@ class ScriptArguments:
     )
 
     reward_model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
-    )
-
-    #Lora config
-    use_peft: bool = field(
-        default=False, metadata={"help": "whether to use peft"}
-    )
-
-    lora_alpha: Optional[float] = field(
-        default=16, metadata={"help": "the lora alpha parameter"}
-    )
-
-    lora_r: Optional[int] = field(
-        default=16, metadata={"help": "the lora r parameter"}
-    )
-
-"min_length": -1,
-    "top_k": 0.0,
-    "top_p": 1.0,
-    "do_sample": True,
-    "pad_token_id": tokenizer.eos_token_id,
-    "max_new_tokens": 32,
-
-    #Generation config
-    min_length: int = field(
-        default=-1, metadata={"help": ""}
-    )
-
-    top_k: Optional[float] = field(
-        default=16, metadata={"help": "the lora alpha parameter"}
-    )
-
-    top_p: Optional[int] = field(
-        default=16, metadata={"help": "the lora r parameter"}
-    )
-
-    do_sample: bool = field(
-        default=16, metadata={"help": "whether to sample"}
-    )
-
-    top_p: Optional[int] = field(
-        default=16, metadata={"help": "the lora r parameter"}
-    )
-
-    top_p: Optional[int] = field(
-        default=16, metadata={"help": "the lora r parameter"}
+        metadata={"help": "Path to pretrained reward_model or model identifier from huggingface.co/models"}
     )
 
 
-parser = HfArgumentParser((ScriptArguments, ModelArguments, DataTrainingArguments, PPOConfig))
-script_args, model_args, data_args, ppo_config = parser.parse_args_into_dataclasses()
+parser = HfArgumentParser((ScriptArguments, ModelArguments, DataTrainingArguments, GenerationArguments, PPOConfig))
+script_args, model_args, data_args, gen_args, ppo_config = parser.parse_args_into_dataclasses()
+
+
+#Pass tracking parameters
+ppo_config.task_name = "rl"
+ppo_config.model_name = "vit5"
+ppo_config.query_dataset = "ViQuAD"
+ppo_config.reward_model = "?"
 
 
 # Setup logging
@@ -284,17 +246,6 @@ if sentiment_pipe.tokenizer.pad_token_id is None:
 if sentiment_pipe.model.config.pad_token_id is None:
     sentiment_pipe.model.config.pad_token_id = tokenizer.pad_token_id
 
-# We then define the arguments to pass to the `generate` function. These arguments
-# are passed to the `generate` function of the PPOTrainer, which is a wrapper around
-# the `generate` function of the trained model.
-generation_kwargs = {
-    "min_length": -1,
-    "top_k": 0.0,
-    "top_p": 1.0,
-    "do_sample": True,
-    "pad_token_id": tokenizer.eos_token_id,
-    "max_new_tokens": 32,
-}
 
 for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
     query_tensors = batch["input_ids"]
@@ -304,7 +255,12 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors,
         return_prompt=False,
         generate_ref_response=True,
-        **generation_kwargs
+        min_new_tokens = gen_args.min_new_tokens,
+        max_new_tokens = gen_args.max_new_tokens,
+        do_sample = gen_args.do_sample,
+        temperature = gen_args.temperature,
+        top_k = gen_args.top_k,
+        top_p = gen_args.top_p,
     )
     batch["response"] = tokenizer.batch_decode(response_tensors)
     batch["ref_response"] = tokenizer.batch_decode(ref_response_tensors)

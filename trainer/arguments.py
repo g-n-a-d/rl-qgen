@@ -230,3 +230,34 @@ class DataTrainingArguments:
                 assert extension in ["csv", "jsonl"], "`test_file` should be a csv or a json file."
         if self.val_max_target_length is None:
             self.val_max_target_length = self.max_target_length
+
+
+@dataclass
+class GenerationArguments:
+    """
+    Arguments pertaining to which generation strategy we are going to apply.
+    """
+
+    min_new_tokens: Optional[int] = field(
+        default=0, metadata={"help": "Minimum number of new tokens"}
+    )
+
+    max_new_tokens: Optional[int] = field(
+        default=32, metadata={"help": "Maxiimum number of new tokens"}
+    )
+
+    do_sample: bool = field(
+        default=16, metadata={"help": "whether to do sample"}
+    )
+
+    temperature: Optional[float] = field(
+        default=1.0, metadata={"help": "the temperature parameter"}
+    )
+
+    top_k: Optional[float] = field(
+        default=0.0, metadata={"help": "the top_k alpha parameter"}
+    )
+
+    top_p: Optional[float] = field(
+        default=1.0, metadata={"help": "the top_p parameter"}
+    )
