@@ -11,9 +11,9 @@ from data_utils import make_prompt
 
 def load_args():
     parser = HfArgumentParser(ModelArguments)
-    args = parser.parse_args_into_dataclasses()
+    model_args, = parser.parse_args_into_dataclasses()
     
-    return args
+    return model_args
 
 def load_model(model_name_or_path, token):
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, token=token)  
