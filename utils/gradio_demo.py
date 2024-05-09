@@ -58,7 +58,7 @@ def run_demo():
         ],
         outputs=gr.Textbox(label="Question", lines=3)
     )
-    demo.launch()
+    demo.launch(share=True)
     
 if __name__ == "__main__":
     run_demo()
