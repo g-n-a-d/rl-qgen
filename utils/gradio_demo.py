@@ -33,7 +33,13 @@ def run_demo():
     model_args = load_args()
 
     model, tokenizer = load_model(model_name_or_path=model_args.model_name_or_path, token=model_args.token)
-    pipe = lambda context, answer, **gen_config : infer(model=model, tokenizer=tokenizer, context=context, answer=answer, **gen_config)
+    pipe = lambda context, answer, top_p : infer(
+        model=model,
+        tokenizer=tokenizer,
+        context=context,
+        answer=answer,
+        **{"top_p" : top_p}
+    )
 
     demo = gr.Interface(
         fn=pipe,
@@ -48,7 +54,7 @@ def run_demo():
                 label="Answer",
                 lines=2
             ),
-            gr.Slider(0.1, 1, step=0.1, label='Top-p', default=0.9)
+            gr.Slider(0.1, 1, step=0.1, label='Top-p', value=0.9)
         ],
         outputs=gr.Textbox(label="Question", lines=3)
     )
