@@ -17,7 +17,7 @@ from transformers import (
     set_seed,
 )
 
-from trl import ModelConfig, RewardConfig, RewardTrainer, get_kbit_device_map, get_peft_config, get_quantization_config
+from trl import RewardConfig, RewardTrainer
 
 from arguments import ModelArguments, DataTrainingArguments
 from utils.data_utils import make_prompt

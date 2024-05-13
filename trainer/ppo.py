@@ -80,6 +80,11 @@ logging.basicConfig(
     datefmt="%m/%d/%Y %H:%M:%S",
 )
 
+datasets.utils.logging.set_verbosity(logging.INFO)
+transformers.utils.logging.set_verbosity(logging.INFO)
+transformers.utils.logging.enable_default_handler()
+transformers.utils.logging.enable_explicit_format()
+
 # Log on each process:
 logger.info(f"Training parameters {ppo_config}")
 
@@ -294,7 +299,7 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
     stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
 
     # Logging
-    logger.info("Step: {}".format())
+    logger.info("Step: {}".format(_epoch))
     filtered_stats = {key : stats[key] for key in stats.keys() if key in [
         "objective/kl",
         "objective/kl_coef",
