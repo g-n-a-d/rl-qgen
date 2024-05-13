@@ -261,3 +261,9 @@ class GenerationArguments:
     top_p: Optional[float] = field(
         default=1.0, metadata={"help": "the top_p parameter"}
     )
+
+    def to_dict(self):
+        output_dict = {}
+        for key, value in self.__dict__.items():
+            output_dict[key] = value
+        return output_dict

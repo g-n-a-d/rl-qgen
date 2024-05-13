@@ -2,15 +2,14 @@
 
 accelerate launch \
     --config_file ./config/multi_gpu.yaml \
-    ./trainer/seq2seq.py \
-    --model_name_or_path VietAI/vit5-base \
+    trainer/ppo.py \
+    --reward_model_name_or_path vinai/phobert-base-v2\
+    --model_name_or_path ./model/base_seq2seq \
     --lang vietnamese \
     --context_column context \
     --question_column question \
     --answer_column answer \
     --train_file ./data/processed/train.jsonl \
-    --validation_file ./data/processed/dev.jsonl \
-    --test_file ./data/processed/test.jsonl \
     --output_dir ./outputs/ \
     --do_train \
     --do_eval \
