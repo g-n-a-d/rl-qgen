@@ -13,6 +13,7 @@ accelerate launch \
     --test_file ./data/processed/test.jsonl \
     --max_source_length 1024 \
     --max_target_length 128 \
+    --pad_to_max_length True \
     --output_dir ./outputs/ \
     --do_train \
     --do_eval \
