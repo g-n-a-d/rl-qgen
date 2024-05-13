@@ -11,6 +11,8 @@ accelerate launch \
     --train_file ./data/processed/train.jsonl \
     --validation_file ./data/processed/dev.jsonl \
     --test_file ./data/processed/test.jsonl \
+    --max_source_length 1024 \
+    --max_target_length 128 \
     --output_dir ./outputs/ \
     --do_train \
     --do_eval \

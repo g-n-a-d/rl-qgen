@@ -101,6 +101,7 @@ if __name__ == "__main__":
     )
     model = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
+        num_labels=1,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
         cache_dir=model_args.cache_dir,
@@ -238,18 +239,6 @@ if __name__ == "__main__":
         inputs = [prefix + inp for inp in inputs]
         model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
 
-        # Tokenize targets with the `text_target` keyword argument
-        labels = tokenizer(text_target=targets, max_length=max_target_length, padding=padding, truncation=True)
-
-        # If we are padding here, replace all tokenizer.pad_token_id in the labels by -100 when we want to ignore
-        # padding in the loss.
-        if padding == "max_length" and data_args.ignore_pad_token_for_loss:
-            labels["input_ids"] = [
-                [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
-            ]
-
-        model_inputs["labels"] = labels["input_ids"]
-
         return model_inputs
 
     if reward_config.do_train:
@@ -300,13 +289,7 @@ if __name__ == "__main__":
             )
 
     # Data collator
-    label_pad_token_id = -100 if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id
-    data_collator = DataCollatorForSeq2Seq(
-        tokenizer,
-        model=model,
-        label_pad_token_id=label_pad_token_id,
-        pad_to_multiple_of=8 if reward_config.fp16 else None,
-    )
+    
 
 
     ################
@@ -342,43 +325,42 @@ if __name__ == "__main__":
         trainer.save_state()
 
     # Evaluation
-    results = {}
     if reward_config.do_eval:
         logger.info("*** Evaluate ***")
-        if isinstance(eval_dataset, dict):
-            metrics = {}
-            for eval_ds_name, eval_ds in eval_dataset.items():
-                dataset_metrics = trainer.evaluate(eval_dataset=eval_ds, metric_key_prefix=f"eval_{eval_ds_name}")
-                metrics.update(dataset_metrics)
-        else:
-            metrics = trainer.evaluate(metric_key_prefix="eval")
+        metrics = trainer.evaluate(eval_dataset=eval_dataset)
         max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
         metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
-
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
 
     if reward_config.do_predict:
         logger.info("*** Predict ***")
-
-        predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict")
-        metrics = predict_results.metrics
-        max_predict_samples = (
-            data_args.max_predict_samples if data_args.max_predict_samples is not None else len(predict_dataset)
-        )
-        metrics["predict_samples"] = min(max_predict_samples, len(predict_dataset))
-
-        trainer.log_metrics("predict", metrics)
-        trainer.save_metrics("predict", metrics)
-
+        # Removing the `label` columns if exists because it might contains -1 and Trainer won't like that.
+        if "label" in predict_dataset.features:
+            predict_dataset = predict_dataset.remove_columns("label")
+        predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
+        if is_regression:
+            predictions = np.squeeze(predictions)
+        elif is_multi_label:
+            # Convert logits to multi-hot encoding. We compare the logits to 0 instead of 0.5, because the sigmoid is not applied.
+            # You can also pass `preprocess_logits_for_metrics=lambda logits, labels: nn.functional.sigmoid(logits)` to the Trainer
+            # and set p > 0.5 below (less efficient in this case)
+            predictions = np.array([np.where(p > 0, 1, 0) for p in predictions])
+        else:
+            predictions = np.argmax(predictions, axis=1)
+        output_predict_file = os.path.join(training_args.output_dir, "predict_results.txt")
         if trainer.is_world_process_zero():
-            if reward_config.predict_with_generate:
-                predictions = predict_results.predictions
-                predictions = np.where(predictions != -100, predictions, tokenizer.pad_token_id)
-                predictions = tokenizer.batch_decode(
-                    predictions, skip_special_tokens=True, clean_up_tokenization_spaces=True
-                )
-                predictions = [pred.strip() for pred in predictions]
-                output_prediction_file = os.path.join(reward_config.output_dir, "generated_predictions.txt")
-                with open(output_prediction_file, "w") as writer:
-                    writer.write("\n".join(predictions))
+            with open(output_predict_file, "w") as writer:
+                logger.info("***** Predict results *****")
+                writer.write("index\tprediction\n")
+                for index, item in enumerate(predictions):
+                    if is_regression:
+                        writer.write(f"{index}\t{item:3.3f}\n")
+                    elif is_multi_label:
+                        # recover from multi-hot encoding
+                        item = [label_list[i] for i in range(len(item)) if item[i] == 1]
+                        writer.write(f"{index}\t{item}\n")
+                    else:
+                        item = label_list[item]
+                        writer.write(f"{index}\t{item}\n")
+        logger.info("Predict results saved at {}".format(output_predict_file))
