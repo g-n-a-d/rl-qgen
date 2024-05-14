@@ -279,7 +279,7 @@ if __name__ == "__main__":
             )
 
     # Data collator
-    collator = RewardDataCollatorWithPadding(tokenizer=tokenizer)
+    collator = RewardDataCollatorWithPadding(tokenizer=tokenizer, max_length=256)
 
 
     ################
@@ -294,9 +294,8 @@ if __name__ == "__main__":
         data_collator=collator,
     )
 
-    for i in RewardTrainer.dataloader:
-        print(i)
-        break
+    print(train_dataset[0])
+
 
     if reward_config.do_train:
         checkpoint = None
