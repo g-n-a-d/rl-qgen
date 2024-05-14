@@ -110,9 +110,6 @@ if __name__ == "__main__":
     if len(tokenizer) > embedding_size:
         model.resize_token_embeddings(len(tokenizer))
 
-    if model.config.decoder_start_token_id is None:
-        raise ValueError("Make sure that `config.decoder_start_token_id` is correctly defined")
-
     if (
         hasattr(model.config, "max_position_embeddings")
         and model.config.max_position_embeddings < data_args.max_source_length
@@ -212,12 +209,6 @@ if __name__ == "__main__":
     # Temporarily set max_target_length for training.
     max_target_length = data_args.max_target_length
     padding = "max_length" if data_args.pad_to_max_length else False
-
-    if reward_config.label_smoothing_factor > 0 and not hasattr(model, "prepare_decoder_input_ids_from_labels"):
-        logger.warning(
-            "label_smoothing is enabled but the `prepare_decoder_input_ids_from_labels` method is not defined for "
-            f"`{model.__class__.__name__}`. This will lead to loss being calculated twice and will take up more memory"
-        )
 
     def preprocess_function(examples):
         # remove pairs where at least one record is None
