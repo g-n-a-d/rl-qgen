@@ -217,7 +217,7 @@ if __name__ == "__main__":
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
                 inputs_chosen.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i][0]))
-                inputs_chosen.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i][1]))
+                inputs_rejected.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i][1]))
 
         inputs_chosen_ids = tokenizer(inputs_chosen, max_length=data_args.max_source_length, padding=padding, truncation=True)
         inputs_rejected_ids = tokenizer(inputs_rejected, max_length=data_args.max_source_length, padding=padding, truncation=True)
