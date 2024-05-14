@@ -5,6 +5,7 @@ sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
 import warnings
 from tqdm import tqdm
 
+import numpy as np
 import torch
 import datasets
 from datasets import load_dataset
@@ -16,14 +17,13 @@ from transformers import (
     HfArgumentParser,
     set_seed,
 )
+from transformers.trainer_utils import get_last_checkpoint
 
 from trl import RewardConfig, RewardTrainer
+from trl.utils import RewardDataCollatorWithPadding
 
 from arguments import ModelArguments, DataTrainingArguments
 from utils.data_utils import make_prompt
-
-
-tqdm.pandas()
 
 
 if __name__ == "__main__":
@@ -55,12 +55,6 @@ if __name__ == "__main__":
         + f"distributed training: {reward_config.parallel_mode.value == 'distributed'}, 16-bits training: {reward_config.fp16}"
     )
     logger.info(f"Training/evaluation parameters {reward_config}")
-
-    if data_args.source_prefix is None:
-        logger.warning(
-            "You didn't provide a source prefix, which is the expected, e.g. with "
-            "`--source_prefix 'generate: ' `"
-        )
 
     # Detecting last checkpoint.
     last_checkpoint = None
@@ -170,8 +164,6 @@ if __name__ == "__main__":
             token=model_args.token,
         )
 
-    prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
-
     # Preprocessing the datasets.
     # We need to tokenize inputs and targets.
     if reward_config.do_train:
@@ -230,14 +222,21 @@ if __name__ == "__main__":
     def preprocess_function(examples):
         # remove pairs where at least one record is None
 
-        inputs, targets = [], []
+        inputs_chosen, inputs_rejected = [], []
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i]))
-                targets.append(examples[question_column][i])
+                inputs_chosen.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i][0]))
+                inputs_chosen.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i][1]))
 
-        inputs = [prefix + inp for inp in inputs]
-        model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
+        inputs_chosen_ids = tokenizer(inputs_chosen, max_length=data_args.max_source_length, padding=padding, truncation=True)
+        inputs_rejected_ids = tokenizer(inputs_rejected, max_length=data_args.max_source_length, padding=padding, truncation=True)
+
+        model_inputs = {
+            "input_ids_chosen" : inputs_chosen_ids["input_ids"],
+            "attention_mask_chosen" : inputs_chosen_ids["attention_mask"],
+            "input_ids_rejected" : inputs_rejected_ids["input_ids"],
+            "attention_mask_rejected" : inputs_rejected_ids["attention_mask"]
+        }
 
         return model_inputs
 
@@ -289,7 +288,7 @@ if __name__ == "__main__":
             )
 
     # Data collator
-    
+    collator = RewardDataCollatorWithPadding(tokenizer=tokenizer)
 
 
     ################
@@ -301,9 +300,11 @@ if __name__ == "__main__":
         args=reward_config,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
+        data_collator=collator,
     )
     trainer.train()
     trainer.save_model(reward_config.output_dir)
+
 
     if reward_config.do_train:
         checkpoint = None
@@ -339,28 +340,12 @@ if __name__ == "__main__":
         if "label" in predict_dataset.features:
             predict_dataset = predict_dataset.remove_columns("label")
         predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
-        if is_regression:
-            predictions = np.squeeze(predictions)
-        elif is_multi_label:
-            # Convert logits to multi-hot encoding. We compare the logits to 0 instead of 0.5, because the sigmoid is not applied.
-            # You can also pass `preprocess_logits_for_metrics=lambda logits, labels: nn.functional.sigmoid(logits)` to the Trainer
-            # and set p > 0.5 below (less efficient in this case)
-            predictions = np.array([np.where(p > 0, 1, 0) for p in predictions])
-        else:
-            predictions = np.argmax(predictions, axis=1)
-        output_predict_file = os.path.join(training_args.output_dir, "predict_results.txt")
+        predictions = np.squeeze(predictions)
+        output_predict_file = os.path.join(reward_config.output_dir, "predict_results.txt")
         if trainer.is_world_process_zero():
             with open(output_predict_file, "w") as writer:
                 logger.info("***** Predict results *****")
                 writer.write("index\tprediction\n")
                 for index, item in enumerate(predictions):
-                    if is_regression:
-                        writer.write(f"{index}\t{item:3.3f}\n")
-                    elif is_multi_label:
-                        # recover from multi-hot encoding
-                        item = [label_list[i] for i in range(len(item)) if item[i] == 1]
-                        writer.write(f"{index}\t{item}\n")
-                    else:
-                        item = label_list[item]
-                        writer.write(f"{index}\t{item}\n")
+                    writer.write(f"{index}\t{item:3.3f}\n")
         logger.info("Predict results saved at {}".format(output_predict_file))

@@ -24,9 +24,6 @@ from arguments import ModelArguments, DataTrainingArguments, GenerationArguments
 from utils.data_utils import make_prompt
 
 
-tqdm.pandas()
-
-
 logger = logging.getLogger(__name__)
 
 
