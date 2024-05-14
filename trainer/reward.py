@@ -289,52 +289,52 @@ if __name__ == "__main__":
         model=model,
         tokenizer=tokenizer,
         args=reward_config,
-        # train_dataset=train_dataset,
-        # eval_dataset=eval_dataset,
-        # data_collator=collator,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        data_collator=collator,
     )
 
 
-    # if reward_config.do_train:
-    #     checkpoint = None
-    #     if reward_config.resume_from_checkpoint is not None:
-    #         checkpoint = reward_config.resume_from_checkpoint
-    #     elif last_checkpoint is not None:
-    #         checkpoint = last_checkpoint
-    #     train_result = trainer.train(resume_from_checkpoint=checkpoint)
-    #     trainer.save_model()  # Saves the tokenizer too for easy upload
+    if reward_config.do_train:
+        checkpoint = None
+        if reward_config.resume_from_checkpoint is not None:
+            checkpoint = reward_config.resume_from_checkpoint
+        elif last_checkpoint is not None:
+            checkpoint = last_checkpoint
+        train_result = trainer.train(resume_from_checkpoint=checkpoint)
+        trainer.save_model()  # Saves the tokenizer too for easy upload
 
-    #     metrics = train_result.metrics
-    #     max_train_samples = (
-    #         data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
-    #     )
-    #     metrics["train_samples"] = min(max_train_samples, len(train_dataset))
+        metrics = train_result.metrics
+        max_train_samples = (
+            data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+        )
+        metrics["train_samples"] = min(max_train_samples, len(train_dataset))
 
-    #     trainer.log_metrics("train", metrics)
-    #     trainer.save_metrics("train", metrics)
-    #     trainer.save_state()
+        trainer.log_metrics("train", metrics)
+        trainer.save_metrics("train", metrics)
+        trainer.save_state()
 
-    # # Evaluation
-    # if reward_config.do_eval:
-    #     logger.info("*** Evaluate ***")
-    #     metrics = trainer.evaluate(eval_dataset=eval_dataset)
-    #     max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
-    #     metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
-    #     trainer.log_metrics("eval", metrics)
-    #     trainer.save_metrics("eval", metrics)
+    # Evaluation
+    if reward_config.do_eval:
+        logger.info("*** Evaluate ***")
+        metrics = trainer.evaluate(eval_dataset=eval_dataset)
+        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
+        metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
+        trainer.log_metrics("eval", metrics)
+        trainer.save_metrics("eval", metrics)
 
-    # if reward_config.do_predict:
-    #     logger.info("*** Predict ***")
-    #     # Removing the `label` columns if exists because it might contains -1 and Trainer won't like that.
-    #     if "label" in predict_dataset.features:
-    #         predict_dataset = predict_dataset.remove_columns("label")
-    #     predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
-    #     predictions = np.squeeze(predictions)
-    #     output_predict_file = os.path.join(reward_config.output_dir, "predict_results.txt")
-    #     if trainer.is_world_process_zero():
-    #         with open(output_predict_file, "w") as writer:
-    #             logger.info("***** Predict results *****")
-    #             writer.write("index\tprediction\n")
-    #             for index, item in enumerate(predictions):
-    #                 writer.write(f"{index}\t{item:3.3f}\n")
-    #     logger.info("Predict results saved at {}".format(output_predict_file))
+    if reward_config.do_predict:
+        logger.info("*** Predict ***")
+        # Removing the `label` columns if exists because it might contains -1 and Trainer won't like that.
+        if "label" in predict_dataset.features:
+            predict_dataset = predict_dataset.remove_columns("label")
+        predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
+        predictions = np.squeeze(predictions)
+        output_predict_file = os.path.join(reward_config.output_dir, "predict_results.txt")
+        if trainer.is_world_process_zero():
+            with open(output_predict_file, "w") as writer:
+                logger.info("***** Predict results *****")
+                writer.write("index\tprediction\n")
+                for index, item in enumerate(predictions):
+                    writer.write(f"{index}\t{item:3.3f}\n")
+        logger.info("Predict results saved at {}".format(output_predict_file))
