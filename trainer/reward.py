@@ -294,8 +294,12 @@ if __name__ == "__main__":
         data_collator=collator,
     )
 
-    print(train_dataset[0])
+    train_dataloader = trainer.get_train_dataloader()
 
+    # Inspect the DataLoader
+    for batch in train_dataloader:
+        print(batch)
+        break
 
     if reward_config.do_train:
         checkpoint = None
