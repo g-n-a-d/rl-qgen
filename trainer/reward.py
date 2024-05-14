@@ -294,6 +294,9 @@ if __name__ == "__main__":
         data_collator=collator,
     )
 
+    for i in RewardTrainer.dataloader:
+        print(i)
+        break
 
     if reward_config.do_train:
         checkpoint = None

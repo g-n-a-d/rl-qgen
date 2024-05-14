@@ -28,5 +28,4 @@ accelerate launch \
     --save_step 200 \
     --save_total_limit 5 \
     --load_best_model_at_end True \
-    --report_to none \
-    --predict_with_generate True
+    --report_to none
