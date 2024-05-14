@@ -20,7 +20,7 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 
 from trl import RewardConfig, RewardTrainer
-from trl.utils import RewardDataCollatorWithPadding
+from trl.trainer.utils import RewardDataCollatorWithPadding
 
 from arguments import ModelArguments, DataTrainingArguments
 from utils.data_utils import make_prompt
