@@ -293,8 +293,6 @@ if __name__ == "__main__":
         eval_dataset=eval_dataset,
         data_collator=collator,
     )
-    trainer.train()
-    trainer.save_model(reward_config.output_dir)
 
 
     if reward_config.do_train:
