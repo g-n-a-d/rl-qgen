@@ -291,8 +291,8 @@ if __name__ == "__main__":
         model=model,
         tokenizer=tokenizer,
         args=reward_config,
-        train_dataset=train_dataset if training_args.do_train else None,
-        eval_dataset=eval_dataset if training_args.do_eval else None,
+        train_dataset=train_dataset if reward_config.do_train else None,
+        eval_dataset=eval_dataset if reward_config.do_eval else None,
         data_collator=collator,
     )
 
