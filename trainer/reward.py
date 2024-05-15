@@ -151,9 +151,6 @@ if __name__ == "__main__":
         if data_args.validation_file is not None:
             data_files["validation"] = data_args.validation_file
             extension = data_args.validation_file.split(".")[-1]
-        if data_args.test_file is not None:
-            data_files["test"] = data_args.test_file
-            extension = data_args.test_file.split(".")[-1]
         extension = "json" if extension == "jsonl" else extension
         raw_datasets = load_dataset(
             extension,
@@ -172,13 +169,9 @@ if __name__ == "__main__":
         if "validation" not in raw_datasets:
             raise ValueError("--do_eval requires a validation dataset")
         column_names = raw_datasets["validation"].column_names
-    elif reward_config.do_predict:
-        if "test" not in raw_datasets:
-            raise ValueError("--do_predict requires a test dataset")
-        column_names = raw_datasets["test"].column_names
     else:
-        logger.info("There is nothing to do. Please pass `do_train`, `do_eval` and/or `do_predict`.")
-        raise ValueError("Please pass `do_train`, `do_eval` and/or `do_predict`.")
+        logger.info("There is nothing to do. Please pass `do_train` and/or `do_eval`.")
+        raise ValueError("Please pass `do_train` and/or `do_eval`.")
     
     # Get the column names for input/target.
     dataset_columns = ("context", "question", "answer")
@@ -263,22 +256,6 @@ if __name__ == "__main__":
                 desc="Running tokenizer on validation dataset",
             )
 
-    if reward_config.do_predict:
-        max_target_length = data_args.val_max_target_length
-        predict_dataset = raw_datasets["test"]
-        if data_args.max_predict_samples is not None:
-            max_predict_samples = min(len(predict_dataset), data_args.max_predict_samples)
-            predict_dataset = predict_dataset.select(range(max_predict_samples))
-        with reward_config.main_process_first(desc="prediction dataset map pre-processing"):
-            predict_dataset = predict_dataset.map(
-                preprocess_function,
-                batched=True,
-                num_proc=data_args.preprocessing_num_workers,
-                remove_columns=column_names,
-                load_from_cache_file=not data_args.overwrite_cache,
-                desc="Running tokenizer on prediction dataset",
-            )
-
     # Data collator
     collator = RewardDataCollatorWithPadding(tokenizer=tokenizer, max_length=data_args.max_source_length)
 
@@ -324,19 +301,3 @@ if __name__ == "__main__":
         metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
-
-    if reward_config.do_predict:
-        logger.info("*** Predict ***")
-        # Removing the `label` columns if exists because it might contains -1 and Trainer won't like that.
-        if "label" in predict_dataset.features:
-            predict_dataset = predict_dataset.remove_columns("label")
-        predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
-        predictions = np.squeeze(predictions)
-        output_predict_file = os.path.join(reward_config.output_dir, "predict_results.txt")
-        if trainer.is_world_process_zero():
-            with open(output_predict_file, "w") as writer:
-                logger.info("***** Predict results *****")
-                writer.write("index\tprediction\n")
-                for index, item in enumerate(predictions):
-                    writer.write(f"{index}\t{item:3.3f}\n")
-        logger.info("Predict results saved at {}".format(output_predict_file))
