@@ -287,13 +287,19 @@ if __name__ == "__main__":
             #     return_dict=True,
             # )["logits"]
             # calculate loss, optionally modulate with margin
-            loss = torch.tensor(0.6, requires_grad=True).to(self.args.device)
+            loss = (rewards_chosen - rewards_rejected).mean()
 
-            
+            if return_outputs:
+                return loss, {
+                    "rewards_chosen": rewards_chosen,
+                    "rewards_rejected": rewards_rejected,
+                }
             return loss
 
 
+    # Keep unused columns not removed.
     reward_config.remove_unused_columns=False
+    
     trainer = CustomTrainer(
         model=model,
         tokenizer=tokenizer,
