@@ -286,6 +286,7 @@ if __name__ == "__main__":
     ################
     # Training
     ################
+    reward_config.remove_unused_columns=False
     trainer = RewardTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -293,15 +294,9 @@ if __name__ == "__main__":
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         data_collator=collator,
-        remove_unused_columns=False,
+        
     )
 
-    train_dataloader = trainer.get_train_dataloader()
-
-    # Inspect the DataLoader
-    for batch in train_dataloader:
-        print(batch)
-        break
 
     if reward_config.do_train:
         checkpoint = None
