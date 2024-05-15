@@ -287,13 +287,9 @@ if __name__ == "__main__":
             #     return_dict=True,
             # )["logits"]
             # calculate loss, optionally modulate with margin
-            loss = rewards_chosen.sum()
+            loss = torch.tensor(0.6, requires_grad=True)
 
-            if return_outputs:
-                return loss, {
-                    "rewards_chosen": rewards_chosen,
-                    "rewards_rejected": rewards_rejected,
-                }
+            
             return loss
 
 
