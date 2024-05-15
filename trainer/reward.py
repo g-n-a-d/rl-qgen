@@ -277,7 +277,7 @@ if __name__ == "__main__":
     for b in trainer.get_train_dataloader():
         l = trainer.compute_loss(model, b)
         print(l)
-        l.backward()
+        trainer.accelerator.backward(l)
         break
 
     # if reward_config.do_train:
