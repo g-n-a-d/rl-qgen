@@ -263,7 +263,7 @@ if __name__ == "__main__":
     ################
     # Training
     ################
-    class customTrainer(RewardTrainer):
+    class CustomTrainer(RewardTrainer):
         def compute_loss(
             self,
             model,
@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
 
     reward_config.remove_unused_columns=False
-    trainer = RewardTrainer(
+    trainer = CustomTrainer(
         model=model,
         tokenizer=tokenizer,
         args=reward_config,
