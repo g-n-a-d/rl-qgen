@@ -287,7 +287,7 @@ if __name__ == "__main__":
                 return_dict=True,
             )["logits"]
             # calculate loss, optionally modulate with margin
-            loss = -torch.nn.functional.logsigmoid(rewards_chosen - rewards_rejected).mean()
+            loss = -torch.sum(rewards_chosen - rewards_rejected)
 
             if return_outputs:
                 return loss, {
