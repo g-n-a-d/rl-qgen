@@ -263,6 +263,7 @@ if __name__ == "__main__":
     ################
     # Training
     ################
+    torch.autograd.set_detect_anomaly(True)
     class CustomTrainer(RewardTrainer):
         def compute_loss(
             self,
