@@ -281,11 +281,11 @@ if __name__ == "__main__":
                 attention_mask=inputs["attention_mask_chosen"],
                 return_dict=True,
             )["logits"]
-            # rewards_rejected = model(
-            #     input_ids=inputs["input_ids_rejected"],
-            #     attention_mask=inputs["attention_mask_rejected"],
-            #     return_dict=True,
-            # )["logits"]
+            rewards_rejected = model(
+                input_ids=inputs["input_ids_rejected"],
+                attention_mask=inputs["attention_mask_rejected"],
+                return_dict=True,
+            )["logits"]
             # calculate loss, optionally modulate with margin
             loss = (rewards_chosen - rewards_rejected).mean()
 
