@@ -23,7 +23,7 @@ from trl import RewardConfig, RewardTrainer
 from trl.trainer.utils import RewardDataCollatorWithPadding
 
 from arguments import ModelArguments, DataTrainingArguments
-from utils.data_utils import make_prompt
+from utils.data_utils import make_reward_input
 
 
 if __name__ == "__main__":
@@ -88,6 +88,7 @@ if __name__ == "__main__":
     )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+        truncation_side="left",
         cache_dir=model_args.cache_dir,
         use_fast=model_args.use_fast_tokenizer,
         revision=model_args.model_revision,
@@ -216,8 +217,8 @@ if __name__ == "__main__":
         inputs_chosen, inputs_rejected = [], []
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inputs_chosen.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i][0]))
-                inputs_rejected.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i][1]))
+                inputs_chosen.append(make_reward_input(examples[context_column][i], examples[answer_column][i], examples[question_column][i][0]))
+                inputs_rejected.append(make_reward_input(examples[context_column][i], examples[answer_column][i], examples[question_column][i][1]))
 
         inputs_chosen_ids = tokenizer(inputs_chosen, max_length=data_args.max_source_length, padding=padding, truncation=True)
         inputs_rejected_ids = tokenizer(inputs_rejected, max_length=data_args.max_source_length, padding=padding, truncation=True)
@@ -279,7 +280,7 @@ if __name__ == "__main__":
             )
 
     # Data collator
-    collator = RewardDataCollatorWithPadding(tokenizer=tokenizer, max_length=256)
+    collator = RewardDataCollatorWithPadding(tokenizer=tokenizer, max_length=data_args.max_source_length)
 
 
     ################
@@ -292,6 +293,7 @@ if __name__ == "__main__":
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         data_collator=collator,
+        remove_unused_columns=False,
     )
 
     train_dataloader = trainer.get_train_dataloader()

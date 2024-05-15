@@ -3,7 +3,7 @@
 accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/reward.py \
-    --model_name_or_path vinai/phobert-base-v2 \
+    --model_name_or_path FacebookAI/xlm-roberta-base \
     --lang vietnamese \
     --context_column context \
     --question_column question \
@@ -11,7 +11,7 @@ accelerate launch \
     --train_file ./data/processed/train.jsonl \
     --validation_file ./data/processed/dev.jsonl \
     --test_file ./data/processed/test.jsonl \
-    --max_source_length 256 \
+    --max_source_length 512 \
     --output_dir ./outputs/ \
     --do_train \
     --do_eval \
