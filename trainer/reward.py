@@ -287,7 +287,7 @@ if __name__ == "__main__":
             #     return_dict=True,
             # )["logits"]
             # calculate loss, optionally modulate with margin
-            loss = torch.tensor(0.6, requires_grad=True)
+            loss = torch.tensor(0.6, requires_grad=True).to(self.args.device)
 
             
             return loss
