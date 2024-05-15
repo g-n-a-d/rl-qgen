@@ -274,11 +274,13 @@ if __name__ == "__main__":
     )
 
 
-    for b in trainer.get_train_dataloader():
-        l = trainer.compute_loss(model, b)
-        print(l)
-        trainer.accelerator.backward(l)
-        break
+    # for b in trainer.get_train_dataloader():
+    #     l = trainer.compute_loss(model, b)
+    #     print(l)
+    #     trainer.accelerator.backward(l)
+    #     break
+
+    trainer.train()
 
     # if reward_config.do_train:
     #     checkpoint = None
