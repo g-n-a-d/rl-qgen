@@ -293,7 +293,7 @@ if __name__ == "__main__":
         args=reward_config,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        data_collator=collator,
+        # data_collator=collator,
         
     )
 
