@@ -10,7 +10,6 @@ accelerate launch \
     --answer_column answer \
     --train_file ./data/processed/train.jsonl \
     --validation_file ./data/processed/dev.jsonl \
-    --test_file ./data/processed/test.jsonl \
     --max_source_length 512 \
     --output_dir ./outputs/ \
     --do_train \
