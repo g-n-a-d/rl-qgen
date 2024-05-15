@@ -274,30 +274,36 @@ if __name__ == "__main__":
     )
 
 
-    if reward_config.do_train:
-        checkpoint = None
-        if reward_config.resume_from_checkpoint is not None:
-            checkpoint = reward_config.resume_from_checkpoint
-        elif last_checkpoint is not None:
-            checkpoint = last_checkpoint
-        train_result = trainer.train(resume_from_checkpoint=checkpoint)
-        trainer.save_model()  # Saves the tokenizer too for easy upload
+    for b in ppo_trainer.get_train_dataloader:
+        l = trainer.compute_loss(model, b)
+        print(l)
+        l.backward()
+        break
 
-        metrics = train_result.metrics
-        max_train_samples = (
-            data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
-        )
-        metrics["train_samples"] = min(max_train_samples, len(train_dataset))
+    # if reward_config.do_train:
+    #     checkpoint = None
+    #     if reward_config.resume_from_checkpoint is not None:
+    #         checkpoint = reward_config.resume_from_checkpoint
+    #     elif last_checkpoint is not None:
+    #         checkpoint = last_checkpoint
+    #     train_result = trainer.train(resume_from_checkpoint=checkpoint)
+    #     trainer.save_model()  # Saves the tokenizer too for easy upload
 
-        trainer.log_metrics("train", metrics)
-        trainer.save_metrics("train", metrics)
-        trainer.save_state()
+    #     metrics = train_result.metrics
+    #     max_train_samples = (
+    #         data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+    #     )
+    #     metrics["train_samples"] = min(max_train_samples, len(train_dataset))
 
-    # Evaluation
-    if reward_config.do_eval:
-        logger.info("*** Evaluate ***")
-        metrics = trainer.evaluate(eval_dataset=eval_dataset)
-        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
-        metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
-        trainer.log_metrics("eval", metrics)
-        trainer.save_metrics("eval", metrics)
+    #     trainer.log_metrics("train", metrics)
+    #     trainer.save_metrics("train", metrics)
+    #     trainer.save_state()
+
+    # # Evaluation
+    # if reward_config.do_eval:
+    #     logger.info("*** Evaluate ***")
+    #     metrics = trainer.evaluate(eval_dataset=eval_dataset)
+    #     max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
+    #     metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
+    #     trainer.log_metrics("eval", metrics)
+    #     trainer.save_metrics("eval", metrics)
