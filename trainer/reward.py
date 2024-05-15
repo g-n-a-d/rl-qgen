@@ -263,6 +263,7 @@ if __name__ == "__main__":
     ################
     # Training
     ################
+    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
     class customTrainer(RewardTrainer):
         def compute_loss(
             self,
