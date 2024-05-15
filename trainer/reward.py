@@ -263,14 +263,13 @@ if __name__ == "__main__":
     ################
     # Training
     ################
-    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
     class customTrainer(RewardTrainer):
         def compute_loss(
             self,
-            model: Union[PreTrainedModel, nn.Module],
-            inputs: Dict[str, Union[torch.Tensor, Any]],
+            model,
+            inputs,
             return_outputs=False,
-        ) -> Union[torch.Tensor, Tuple[torch.Tensor, Dict[str, torch.Tensor]]]:
+        ):
             if not self.use_reward_data_collator:
                 warnings.warn(
                     "The current compute_loss is implemented for RewardDataCollatorWithPadding,"
