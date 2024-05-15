@@ -287,7 +287,7 @@ if __name__ == "__main__":
             #     return_dict=True,
             # )["logits"]
             # calculate loss, optionally modulate with margin
-            loss = (rewards_chosen).mean()
+            loss = rewards_chosen.sum()
 
             if return_outputs:
                 return loss, {
