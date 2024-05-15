@@ -293,10 +293,16 @@ if __name__ == "__main__":
         args=reward_config,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        # data_collator=collator,
+        data_collator=collator,
         
     )
 
+    train_dataloader = trainer.get_train_dataloader()
+
+    # Inspect the DataLoader
+    for batch in train_dataloader:
+            print(batch["input_ids_chosen"])
+            break
 
     if reward_config.do_train:
         checkpoint = None
