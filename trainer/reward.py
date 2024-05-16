@@ -50,8 +50,8 @@ if __name__ == "__main__":
 
     def tokenize(prompt, selected, rejected, tokenizer):
         return {
-            "selected_input_ids": tokenizer(prompt + "###" + selected + tokenizer.eos_token, truncation=True, max_length=args.seq_length).input_ids,
-            "rejected_input_ids": tokenizer(prompt + "###" + rejected + tokenizer.eos_token, truncation=True, max_length=args.seq_length).input_ids,
+            "selected_input_ids": tokenizer(prompt + " ### " + selected + tokenizer.eos_token, truncation=True, max_length=args.seq_length).input_ids,
+            "rejected_input_ids": tokenizer(prompt + " ### " + rejected + tokenizer.eos_token, truncation=True, max_length=args.seq_length).input_ids,
         }
 
     def collate_fn(batch):
