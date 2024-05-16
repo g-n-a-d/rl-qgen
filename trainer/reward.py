@@ -45,7 +45,7 @@ if __name__ == "__main__":
         init_kwargs={"wandb": {"name": f"{model_name}@{args.dataset}"}},
     )
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path, truncation_side="left")
 
     def tokenize(prompt, selected, rejected, tokenizer):
         return {
