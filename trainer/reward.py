@@ -16,7 +16,9 @@ from datasets import load_dataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_path", default="reciprocate/gpt2-tiny", type=str)
-parser.add_argument("--dataset", type=str)
+parser.add_argument("--dataset_name", default=None, type=str)
+parser.add_argument("--train_file", default=None, type=str)
+parser.add_argument("--validation_file", default=None, type=str)
 parser.add_argument("--lr", default=6e-4, type=float)
 parser.add_argument("--min_lr", default=None, type=float)
 parser.add_argument("--weight_decay", default=0.1, type=float)
@@ -57,7 +59,28 @@ if __name__ == "__main__":
         input_ids = sum([[x["rejected_input_ids"], x["selected_input_ids"]] for x in batch], [])
         return tokenizer.pad({"input_ids": input_ids}, padding=True, return_tensors="pt")
 
-    dataset = load_dataset(args.dataset)
+
+    if args.dataset_name is not None:
+        # Downloading and loading a dataset from the hub.
+        dataset = load_dataset(
+            args.dataset_name,
+            token=args.token,
+        )
+    else:
+        data_files = {}
+        if args.train_file is not None:
+            data_files["train"] = args.train_file
+            extension = args.train_file.split(".")[-1]
+        if args.validation_file is not None:
+            data_files["validation"] = args.validation_file
+            extension = args.validation_file.split(".")[-1]
+        extension = "json" if extension == "jsonl" else extension
+        dataset = load_dataset(
+            extension,
+            data_files=data_files,
+            token=args.token,
+        )
+
     if "chosen" in dataset["train"].column_names:
         dataset = dataset.rename_column("chosen", "selected")
     if "replies" in dataset["train"].column_names:
@@ -67,7 +90,7 @@ if __name__ == "__main__":
     eval_dataloaders = []
     tokenized = dataset.map(tokenize, input_columns=["prompt", "selected", "rejected"], fn_kwargs=dict(tokenizer=tokenizer), desc="Tokenizing")
     dataloader = torch.utils.data.DataLoader(tokenized["train"], shuffle=True, batch_size=args.batch_size, collate_fn=collate_fn)
-    eval_dataloaders.append(torch.utils.data.DataLoader(tokenized["test"], shuffle=False, batch_size=args.batch_size, collate_fn=collate_fn))
+    eval_dataloaders.append(torch.utils.data.DataLoader(tokenized["validation"], shuffle=False, batch_size=args.batch_size, collate_fn=collate_fn))
 
 
     model = AutoModelForSequenceClassification.from_pretrained(args.model_path, num_labels=1)
