@@ -263,45 +263,10 @@ if __name__ == "__main__":
     ################
     # Training
     ################
-    torch.autograd.set_detect_anomaly(True)
-    class CustomTrainer(RewardTrainer):
-        def compute_loss(
-            self,
-            model,
-            inputs,
-            return_outputs=False,
-        ):
-            if not self.use_reward_data_collator:
-                warnings.warn(
-                    "The current compute_loss is implemented for RewardDataCollatorWithPadding,"
-                    " if you are using a custom data collator make sure you know what you are doing or"
-                    " implement your own compute_loss method."
-                )
-            rewards_chosen = model(
-                input_ids=inputs["input_ids_chosen"],
-                attention_mask=inputs["attention_mask_chosen"],
-                return_dict=True,
-            )["logits"]
-            rewards_rejected = model(
-                input_ids=inputs["input_ids_rejected"],
-                attention_mask=inputs["attention_mask_rejected"],
-                return_dict=True,
-            )["logits"]
-            # calculate loss, optionally modulate with margin
-            loss = -torch.sum(rewards_chosen)
-
-            if return_outputs:
-                return loss, {
-                    "rewards_chosen": rewards_chosen,
-                    "rewards_rejected": rewards_rejected,
-                }
-            return loss
-
-
     # Keep unused columns not removed.
     reward_config.remove_unused_columns=False
     
-    trainer = CustomTrainer(
+    trainer = RewardTrainer(
         model=model,
         tokenizer=tokenizer,
         args=reward_config,
@@ -311,38 +276,30 @@ if __name__ == "__main__":
     )
 
 
-    # for b in trainer.get_train_dataloader():
-    #     l = trainer.compute_loss(model, b)
-    #     print(l)
-    #     trainer.accelerator.backward(l)
-    #     break
+    if reward_config.do_train:
+        checkpoint = None
+        if reward_config.resume_from_checkpoint is not None:
+            checkpoint = reward_config.resume_from_checkpoint
+        elif last_checkpoint is not None:
+            checkpoint = last_checkpoint
+        train_result = trainer.train(resume_from_checkpoint=checkpoint)
+        trainer.save_model()  # Saves the tokenizer too for easy upload
 
-    trainer.train()
+        metrics = train_result.metrics
+        max_train_samples = (
+            data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+        )
+        metrics["train_samples"] = min(max_train_samples, len(train_dataset))
 
-    # if reward_config.do_train:
-    #     checkpoint = None
-    #     if reward_config.resume_from_checkpoint is not None:
-    #         checkpoint = reward_config.resume_from_checkpoint
-    #     elif last_checkpoint is not None:
-    #         checkpoint = last_checkpoint
-    #     train_result = trainer.train(resume_from_checkpoint=checkpoint)
-    #     trainer.save_model()  # Saves the tokenizer too for easy upload
+        trainer.log_metrics("train", metrics)
+        trainer.save_metrics("train", metrics)
+        trainer.save_state()
 
-    #     metrics = train_result.metrics
-    #     max_train_samples = (
-    #         data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
-    #     )
-    #     metrics["train_samples"] = min(max_train_samples, len(train_dataset))
-
-    #     trainer.log_metrics("train", metrics)
-    #     trainer.save_metrics("train", metrics)
-    #     trainer.save_state()
-
-    # # Evaluation
-    # if reward_config.do_eval:
-    #     logger.info("*** Evaluate ***")
-    #     metrics = trainer.evaluate(eval_dataset=eval_dataset)
-    #     max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
-    #     metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
-    #     trainer.log_metrics("eval", metrics)
-    #     trainer.save_metrics("eval", metrics)
+    # Evaluation
+    if reward_config.do_eval:
+        logger.info("*** Evaluate ***")
+        metrics = trainer.evaluate(eval_dataset=eval_dataset)
+        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
+        metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
+        trainer.log_metrics("eval", metrics)
+        trainer.save_metrics("eval", metrics)
