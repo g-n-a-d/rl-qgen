@@ -289,9 +289,9 @@ if __name__ == "__main__":
             )["logits"]
             # calculate loss, optionally modulate with margin
             if "margin" in inputs:
-                loss = -nn.functional.logsigmoid(rewards_chosen - rewards_rejected - inputs["margin"]).mean()
+                loss = -torch.nn.functional.logsigmoid(rewards_chosen - rewards_rejected - inputs["margin"]).mean()
             else:
-                loss = -nn.functional.logsigmoid(rewards_chosen - rewards_rejected).mean()
+                loss = -torch.nn.functional.logsigmoid(rewards_chosen - rewards_rejected).mean()
 
             if return_outputs:
                 return loss, {
