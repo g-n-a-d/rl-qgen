@@ -263,10 +263,48 @@ if __name__ == "__main__":
     ################
     # Training
     ################
+    from transformers import Trainer
+    class CustomTrainer(Trainer):
+        def compute_loss(
+            self,
+            model,
+            inputs,
+            return_outputs=False,
+        ):
+            if not self.use_reward_data_collator:
+                warnings.warn(
+                    "The current compute_loss is implemented for RewardDataCollatorWithPadding,"
+                    " if you are using a custom data collator make sure you know what you are doing or"
+                    " implement your own compute_loss method."
+                )
+            rewards_chosen = model(
+                input_ids=inputs["input_ids_chosen"],
+                attention_mask=inputs["attention_mask_chosen"],
+                return_dict=True,
+            )["logits"]
+            rewards_rejected = model(
+                input_ids=inputs["input_ids_rejected"],
+                attention_mask=inputs["attention_mask_rejected"],
+                return_dict=True,
+            )["logits"]
+            # calculate loss, optionally modulate with margin
+            if "margin" in inputs:
+                loss = -nn.functional.logsigmoid(rewards_chosen - rewards_rejected - inputs["margin"]).mean()
+            else:
+                loss = -nn.functional.logsigmoid(rewards_chosen - rewards_rejected).mean()
+
+            if return_outputs:
+                return loss, {
+                    "rewards_chosen": rewards_chosen,
+                    "rewards_rejected": rewards_rejected,
+                }
+            return loss
+
+
     # Keep unused columns not removed.
     reward_config.remove_unused_columns=False
     
-    trainer = RewardTrainer(
+    trainer = CustomTrainer(
         model=model,
         tokenizer=tokenizer,
         args=reward_config,
