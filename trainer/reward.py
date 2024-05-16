@@ -112,7 +112,7 @@ if __name__ == "__main__":
     for iepoch in range(args.epochs):
         for batch in dataloader:
             if (step+1) % args.gradient_accumulation_steps == 0:
-                if (step + 1) % args.eval_interval == 0 or step == tbar.total - 1:
+                if ((step + 1) // args.gradient_accumulation_steps) % args.eval_interval == 0 or step == tbar.total - 1:
                     for dataset_name, eval_dataloader in zip([args.dataset_name], eval_dataloaders):
                         model.eval()
                         all_scores, all_delta_scores, all_tokens = [], [], []
