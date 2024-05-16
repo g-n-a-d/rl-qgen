@@ -16,6 +16,7 @@ from datasets import load_dataset
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_path", default="reciprocate/gpt2-tiny", type=str)
 parser.add_argument("--dataset_name", default=None, type=str)
+parser.add_argument("--token", default=None, type=str)
 parser.add_argument("--train_file", default=None, type=str)
 parser.add_argument("--validation_file", default=None, type=str)
 parser.add_argument("--lr", default=6e-4, type=float)
