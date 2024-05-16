@@ -1,5 +1,4 @@
 import torch
-import wandb
 import argparse
 import os
 import transformers
@@ -21,7 +20,7 @@ parser.add_argument("--train_file", default=None, type=str)
 parser.add_argument("--validation_file", default=None, type=str)
 parser.add_argument("--lr", default=6e-4, type=float)
 parser.add_argument("--min_lr", default=None, type=float)
-parser.add_argument("--weight_decay", default=0.1, type=float)
+parser.add_argument("--weight_decay", default=0, type=float)
 parser.add_argument("--batch_size", default=8, type=int)
 parser.add_argument("--epochs", default=1, type=int)
 parser.add_argument("--gradient_accumulation_steps", default=1, type=int)
@@ -42,9 +41,8 @@ if __name__ == "__main__":
 
     accelerator = Accelerator(log_with=None, gradient_accumulation_steps=args.gradient_accumulation_steps)
     accelerator.init_trackers(
-        project_name="autocrit",
+        project_name="reward_model_training",
         config=vars(args),
-        init_kwargs={"wandb": {"name": f"{model_name}@{args.dataset}"}},
     )
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, truncation_side="left")
@@ -85,7 +83,7 @@ if __name__ == "__main__":
         dataset = dataset.rename_column("chosen", "selected")
     if "replies" in dataset["train"].column_names:
         dataset = dataset.map(lambda x: {"selected": x["replies"][0], "rejected": x["replies"][1]}, remove_columns=["replies"])
-    accelerator.print(args.dataset, dataset)
+    accelerator.print(args.dataset_name, dataset)
 
     eval_dataloaders = []
     tokenized = dataset.map(tokenize, input_columns=["prompt", "selected", "rejected"], fn_kwargs=dict(tokenizer=tokenizer), desc="Tokenizing")
@@ -114,7 +112,7 @@ if __name__ == "__main__":
         for batch in dataloader:
             if (step+1) % args.gradient_accumulation_steps == 0:
                 if (step + 1) % args.eval_interval == 0 or step == tbar.total - 1:
-                    for dataset_name, eval_dataloader in zip([args.dataset], eval_dataloaders):
+                    for dataset_name, eval_dataloader in zip([args.dataset_name], eval_dataloaders):
                         model.eval()
                         all_scores, all_delta_scores, all_tokens = [], [], []
 
@@ -134,7 +132,7 @@ if __name__ == "__main__":
                         if accelerator.is_main_process:
                             texts = [text.replace(tokenizer.pad_token, "") for text in tokenizer.batch_decode(all_tokens)]
 
-                            postfix = "" if dataset_name == args.dataset else f"@{dataset_name.split('/')[-1]}"
+                            postfix = "" if dataset_name == args.dataset_name else f"@{dataset_name.split('/')[-1]}"
                             accelerator.log({
                                 f"accuracy{postfix}": accuracy,
                                 f"delta_scores{postfix}": delta_scores,
@@ -144,14 +142,14 @@ if __name__ == "__main__":
                                 f"delta_scores{postfix}": delta_scores,
                             })
 
-                        if accuracy > best_accuracy and dataset_name == args.dataset:
+                        if accuracy > best_accuracy and dataset_name == args.dataset_name:
                             best_accuracy = accuracy
                             accelerator.log({"best_accuracy": best_accuracy}, step=(step+1) // args.gradient_accumulation_steps)
 
                             if args.only_eval:
                                 exit()
                             else:
-                                path = f"{model_name}_{args.dataset}_{args.lr}".replace("/", "_").replace(":", "_").replace("@", "_")
+                                path = f"{model_name}_{args.dataset_name}_{args.lr}".replace("/", "_").replace(":", "_").replace("@", "_")
                                 accelerator.unwrap_model(model).save_pretrained(
                                     os.path.join(args.checkpoint_dir, path),
                                     save_function=accelerator.save,
@@ -162,7 +160,7 @@ if __name__ == "__main__":
                                     tokenizer.save_pretrained(os.path.join(args.checkpoint_dir, path))
                                 accelerator.print(f"Checkpointing -> {os.path.join(args.checkpoint_dir, path)}")
 
-                        if dataset_name == args.dataset:
+                        if dataset_name == args.dataset_name:
                             tbar.set_postfix(accuracy=accuracy, best_accuracy=best_accuracy)
 
                     accelerator.wait_for_everyone()
@@ -177,7 +175,7 @@ if __name__ == "__main__":
                 scheduler.step()
 
             tbar.update()
-            tbar.set_description(f"Training {args.model_path} on {args.dataset}; loss: {loss.item():.4f}")
+            tbar.set_description(f"Training {args.model_path} on {args.dataset_name}; loss: {loss.item():.4f}")
             if (step+1) % args.gradient_accumulation_steps == 0:
                 accelerator.log({"loss": loss.item(), "lr": float(scheduler.get_last_lr()[0])}, step=(step+1) % args.gradient_accumulation_steps)
             step += 1
