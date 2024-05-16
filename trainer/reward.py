@@ -271,12 +271,6 @@ if __name__ == "__main__":
             inputs,
             return_outputs=False,
         ):
-            if not self.use_reward_data_collator:
-                warnings.warn(
-                    "The current compute_loss is implemented for RewardDataCollatorWithPadding,"
-                    " if you are using a custom data collator make sure you know what you are doing or"
-                    " implement your own compute_loss method."
-                )
             rewards_chosen = model(
                 input_ids=inputs["input_ids_chosen"],
                 attention_mask=inputs["attention_mask_chosen"],
