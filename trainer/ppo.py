@@ -191,7 +191,7 @@ def preprocess_function(examples):
 
     padding = "max_length" if data_args.pad_to_max_length else False
 
-    inputs = [data_args.prefix + inp for inp in inputs]
+    inputs = [prefix + inp for inp in inputs]
     model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
 
     return model_inputs
