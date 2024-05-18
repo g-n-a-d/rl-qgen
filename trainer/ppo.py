@@ -281,8 +281,8 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
     stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
 
     # Logging
-    # logger.info("Step: {}".format(_epoch))
-    print("Step: {}".format(_epoch))
+    logger.info("Step: {}".format(_epoch))
+    print("Step: {}".format(_epoch + 1))
     filtered_stats = {key : stats[key] for key in stats.keys() if key in [
         "objective/kl",
         "objective/kl_coef",
@@ -318,14 +318,22 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         "time/ppo/calc_stats",
         "time/ppo/total",
     ]}
-    # logger.info("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
+    logger.info("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
     print("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
-    # logger.info("Batch stats: {}".format(json.dumps(batch, indent=4)))
-    print("Batch stats: {}".format(json.dumps(batch, indent=4)))
+    logger.info("Batch stats: {}".format(json.dumps(
+        {k : batch[k] for k in batch if k in ["context", "answer", "response", "ref_response"]},
+        ensure_ascii=False,
+        indent=4
+    )))
+    print("Batch stats: {}".format(json.dumps(
+        {k : batch[k] for k in batch if k in ["context", "answer", "response", "ref_response"]},
+        ensure_ascii=False,
+        indent=4
+    )))
 
     # Saving
     if _epoch % script_args.saving_step == 0:
-        # logger.info("Saving model and stats...")
+        logger.info("Saving model and stats...")
         print("Saving model and stats...")
         ppo_trainer._save_pretrained(os.path.join(script_args.output_dir, "checkpoint_{}".format(_epoch)))
         with open(os.path.join(script_args.output_dir, "checkpoint_{}/stats.json".format(_epoch)), "r") as fw:
