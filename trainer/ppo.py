@@ -103,9 +103,63 @@ sent_kwargs = {"return_all_scores": True, "function_to_apply": "none", "batch_si
 
 trl_model_class = AutoModelForSeq2SeqLMWithValueHead
 
+# set seed before initializing value head for deterministic eval
+set_seed(ppo_config.seed)
+
+# Now let's build the model, the reference model, and the tokenizer.
+if not script_args.use_peft:
+    ref_model = trl_model_class.from_pretrained(model_args.model_name_or_path, trust_remote_code=model_args.trust_remote_code)
+    device_map = None
+    peft_config = None
+else:
+    peft_config = LoraConfig(
+        r=script_args.lora_r,
+        lora_alpha=script_args.lora_alpha,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+    ref_model = None
+    # Copy the model to each device
+    device_map = {"": Accelerator().local_process_index}
+
 
 #################
-# Datasets
+# Model
+#################
+tokenizer = AutoTokenizer.from_pretrained(
+    model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+    cache_dir=model_args.cache_dir,
+    use_fast=model_args.use_fast_tokenizer,
+    token=model_args.token,
+    trust_remote_code=model_args.trust_remote_code,
+)
+config = AutoConfig.from_pretrained(
+    model_args.config_name if model_args.config_name else model_args.model_name_or_path,
+    cache_dir=model_args.cache_dir,
+    revision=model_args.model_revision,
+    token=model_args.token,
+    trust_remote_code=model_args.trust_remote_code,
+)
+model = trl_model_class.from_pretrained(
+    model_args.model_name_or_path,
+    config=config,
+    token=model_args.token,
+    trust_remote_code=model_args.trust_remote_code,
+    device_map=device_map,
+    peft_config=peft_config,
+)
+
+tokenizer_reward = AutoTokenizer.from_pretrained(script_args.reward_model_name_or_path)
+model_reward = AutoModelForSequenceClassification.from_pretrained(script_args.reward_model_name_or_path)
+
+def get_reward(inputs):
+    input_ids = tokenizer_reward(inputs, padding=True, truncation=True, max_length=script_args.max_length)
+    scores = model(**input_ids).logits
+    return [torch.tensor(score.item()) for score in scores]
+
+
+#################
+# Data
 #################
 # download the raw dataset.
 if data_args.dataset_name is not None:
@@ -160,26 +214,6 @@ else:
         )
 
 
-# set seed before initializing value head for deterministic eval
-set_seed(ppo_config.seed)
-
-# Now let's build the model, the reference model, and the tokenizer.
-if not script_args.use_peft:
-    ref_model = trl_model_class.from_pretrained(model_args.model_name_or_path, trust_remote_code=model_args.trust_remote_code)
-    device_map = None
-    peft_config = None
-else:
-    peft_config = LoraConfig(
-        r=script_args.lora_r,
-        lora_alpha=script_args.lora_alpha,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-    ref_model = None
-    # Copy the model to each device
-    device_map = {"": Accelerator().local_process_index}
-
-
 # One should customize this function to train the model on its own dataset.
 prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
 
@@ -207,41 +241,6 @@ dataset = raw_ds.map(
 def collator(data):
 
     return {key: [d[key] for d in data] for key in data[0]}
-
-
-#################
-# Model
-#################
-tokenizer = AutoTokenizer.from_pretrained(
-    model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
-    cache_dir=model_args.cache_dir,
-    use_fast=model_args.use_fast_tokenizer,
-    token=model_args.token,
-    trust_remote_code=model_args.trust_remote_code,
-)
-config = AutoConfig.from_pretrained(
-    model_args.config_name if model_args.config_name else model_args.model_name_or_path,
-    cache_dir=model_args.cache_dir,
-    revision=model_args.model_revision,
-    token=model_args.token,
-    trust_remote_code=model_args.trust_remote_code,
-)
-model = trl_model_class.from_pretrained(
-    model_args.model_name_or_path,
-    config=config,
-    token=model_args.token,
-    trust_remote_code=model_args.trust_remote_code,
-    device_map=device_map,
-    peft_config=peft_config,
-)
-
-tokenizer_reward = AutoTokenizer.from_pretrained(script_args.reward_model_name_or_path)
-model_reward = AutoModelForSequenceClassification.from_pretrained(script_args.reward_model_name_or_path)
-
-def get_reward(inputs):
-    input_ids = tokenizer_reward(inputs, padding=True, truncation=True, max_length=script_args.max_length)
-    scores = model(**input_ids).logits
-    return [torch.tensor(score.item()) for score in scores]
 
 
 #################
