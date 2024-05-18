@@ -3,9 +3,9 @@
 accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/ppo.py \
+    --reward_model_name_or_path ... \
     --output_dir ./outputs/ \
     --saving_step 10 \
-    --reward_model_name_or_path ...\
     --model_name_or_path ./model/base_seq2seq \
     --context_column context \
     --question_column question \

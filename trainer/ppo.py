@@ -37,16 +37,16 @@ class ScriptArguments:
     Arguments pertaining to which reward_model/peft we are going to fine-tune from.
     """
 
+    reward_model_name_or_path: str = field(
+        metadata={"help": "Path to pretrained reward model or identifier from huggingface.co/models"}
+    )
+
     output_dir: str = field(
         default="./outputs", metadata={"help": "Path to save outputs"}
     )
 
     saving_step: Optional[int] = field(
         default=10, metadata={"help": "Model is saved every _ steps"}
-    )
-
-    reward_model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained reward model or identifier from huggingface.co/models"}
     )
 
     # LoraConfig
