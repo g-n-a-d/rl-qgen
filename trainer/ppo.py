@@ -42,6 +42,10 @@ class ScriptArguments:
         metadata={"help": "Path to pretrained reward model or identifier from huggingface.co/models"}
     )
 
+    max_reward_input_length: Optional[int] = field(
+        default=512, metadata={"help": "Maximum length for reward model inputs"}
+    )
+
     output_dir: str = field(
         default="./outputs", metadata={"help": "Path to save outputs"}
     )
@@ -153,7 +157,7 @@ tokenizer_reward = AutoTokenizer.from_pretrained(script_args.reward_model_name_o
 model_reward = AutoModelForSequenceClassification.from_pretrained(script_args.reward_model_name_or_path)
 
 def get_reward(inputs):
-    input_ids = tokenizer_reward(inputs, padding=True, truncation=True, max_length=script_args.max_length)
+    input_ids = tokenizer_reward(inputs, padding=True, truncation=True, max_length=script_args.max_reward_input_length)
     scores = model(**input_ids).logits
     return [torch.tensor(score.item()) for score in scores]
 
@@ -240,7 +244,7 @@ dataset = raw_ds.map(
 
 def collator(data):
 
-    return {key: [d[key] for d in data] for key in data[0]}
+    return tokenizer.pad(data, padding=True, return_tensors="pt")
 
 
 #################
@@ -260,9 +264,9 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         generate_ref_response=True,
         **gen_args.to_dict(),
     )
-    batch["query"] = tokenizer.batch_decode(query_tensors, )
-    batch["response"] = tokenizer.batch_decode(response_tensors)
-    batch["ref_response"] = tokenizer.batch_decode(ref_response_tensors)
+    batch["query"] = tokenizer.batch_decode(query_tensors, skip_special_tokens=True)
+    batch["response"] = tokenizer.batch_decode(response_tensors, skip_special_tokens=True)
+    batch["ref_response"] = tokenizer.batch_decode(ref_response_tensors, skip_special_tokens=True)
 
     # Compute reward
     texts = [make_reward_input(c, a, q) for c, a, q in zip(batch["context"], batch["answer"], batch["response"])]
