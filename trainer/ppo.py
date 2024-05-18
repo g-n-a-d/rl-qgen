@@ -128,7 +128,7 @@ else:
         cache_dir=model_args.cache_dir,
         token=model_args.token,
     )
-column_names = raw_ds["train"].column_names
+column_names = raw_ds.column_names
 
 
 # Get the column names for input/target.

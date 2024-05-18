@@ -6,7 +6,7 @@ accelerate launch \
     --reward_model_name_or_path ... \
     --output_dir ./outputs/ \
     --saving_step 10 \
-    --model_name_or_path ./model/base_seq2seq \
+    --model_name_or_path gnad/qgen-vit5-base \
     --context_column context \
     --question_column question \
     --answer_column answer \
