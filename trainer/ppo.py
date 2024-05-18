@@ -42,15 +42,11 @@ class ScriptArguments:
     )
 
     saving_step: Optional[int] = field(
-        default=40, metadata={"help": "Model is saved every _ steps"}
+        default=10, metadata={"help": "Model is saved every _ steps"}
     )
 
     reward_model_name_or_path: str = field(
         metadata={"help": "Path to pretrained reward model or identifier from huggingface.co/models"}
-    )
-
-    max_length: Optional[int] = field(
-        default=512, metadata={"help": "Maximum sequence length passed to reward model."}
     )
 
     # LoraConfig
@@ -217,7 +213,6 @@ def build_dataset(data_args):
         preprocess_function,
         batched=True,
         num_proc=data_args.preprocessing_num_workers,
-        remove_columns=column_names,
         load_from_cache_file=not data_args.overwrite_cache,
         desc="Running tokenizer on train dataset",
     )
@@ -275,12 +270,6 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         return_prompt=False,
         generate_ref_response=True,
         **gen_args.to_dict(),
-        # min_new_tokens = gen_args.min_new_tokens,
-        # max_new_tokens = gen_args.max_new_tokens,
-        # do_sample = gen_args.do_sample,
-        # temperature = gen_args.temperature,
-        # top_k = gen_args.top_k,
-        # top_p = gen_args.top_p,
     )
     batch["query"] = tokenizer.batch_decode(query_tensors, )
     batch["response"] = tokenizer.batch_decode(response_tensors)
@@ -295,55 +284,55 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
     batch["ref_rewards"] = ref_rewards
 
     # Run PPO step
-    stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
+    # stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
 
     # Logging
     # logger.info("Step: {}".format(_epoch))
-    print("Step: {}".format(_epoch))
-    filtered_stats = {key : stats[key] for key in stats.keys() if key in [
-        "objective/kl",
-        "objective/kl_coef",
-        "objective/entropy",
-        "ppo/mean_non_score_reward",
-        "ppo/mean_scores",
-        "ppo/std_scores",
-        "tokens/queries_len_mean",
-        "tokens/queries_len_std",
-        "tokens/responses_len_mean",
-        "tokens/responses_len_std",
-        "ppo/loss/policy",
-        "ppo/loss/value",
-        "ppo/loss/total",
-        "ppo/policy/entropy",
-        "ppo/policy/approxkl",
-        "ppo/policy/policykl",
-        "ppo/policy/clipfrac",
-        "ppo/policy/advantages_mean",
-        "ppo/returns/mean",
-        "ppo/returns/var",
-        "ppo/val/vpred",
-        "ppo/val/error",
-        "ppo/val/clipfrac",
-        "ppo/val/mean",
-        "ppo/val/var",
-        "ppo/val/var_explained",
-        "ppo/learning_rate",
-        "time/ppo/forward_pass",
-        "time/ppo/compute_rewards",
-        "time/ppo/compute_advantages",
-        "time/ppo/optimize_step",
-        "time/ppo/calc_stats",
-        "time/ppo/total",
-    ]}
-    # logger.info("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
-    print("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
+    # print("Step: {}".format(_epoch))
+    # filtered_stats = {key : stats[key] for key in stats.keys() if key in [
+    #     "objective/kl",
+    #     "objective/kl_coef",
+    #     "objective/entropy",
+    #     "ppo/mean_non_score_reward",
+    #     "ppo/mean_scores",
+    #     "ppo/std_scores",
+    #     "tokens/queries_len_mean",
+    #     "tokens/queries_len_std",
+    #     "tokens/responses_len_mean",
+    #     "tokens/responses_len_std",
+    #     "ppo/loss/policy",
+    #     "ppo/loss/value",
+    #     "ppo/loss/total",
+    #     "ppo/policy/entropy",
+    #     "ppo/policy/approxkl",
+    #     "ppo/policy/policykl",
+    #     "ppo/policy/clipfrac",
+    #     "ppo/policy/advantages_mean",
+    #     "ppo/returns/mean",
+    #     "ppo/returns/var",
+    #     "ppo/val/vpred",
+    #     "ppo/val/error",
+    #     "ppo/val/clipfrac",
+    #     "ppo/val/mean",
+    #     "ppo/val/var",
+    #     "ppo/val/var_explained",
+    #     "ppo/learning_rate",
+    #     "time/ppo/forward_pass",
+    #     "time/ppo/compute_rewards",
+    #     "time/ppo/compute_advantages",
+    #     "time/ppo/optimize_step",
+    #     "time/ppo/calc_stats",
+    #     "time/ppo/total",
+    # ]}
+    # # logger.info("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
+    # print("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
     logger.info("Batch stats: {}".format(json.dumps(batch, indent=4)))
     # print("Batch stats: {}".format(json.dumps(batch, indent=4)))
 
     # Saving
-    if _epoch % script_args.saving_step == 0:
-        # logger.info("Saving model and stats...")
-        print("Saving model and stats...")
-        ppo_trainer._save_pretrained(os.path.join(script_args.output_dir, "checkpoint_{}".format(_epoch)))
-        with open(os.path.join(script_args.output_dir, "checkpoint_{}/stats.json".format(_epoch)), "r") as fw:
-            json.dump(filtered_stats, fw)
+    # if _epoch % script_args.saving_step == 0:
+    #     # logger.info("Saving model and stats...")
+    #     print("Saving model and stats...")
+    #     ppo_trainer._save_pretrained(os.path.join(script_args.output_dir, "checkpoint_{}".format(_epoch)))
+    #     with open(os.path.join(script_args.output_dir, "checkpoint_{}/stats.json".format(_epoch)), "r") as fw:
+    #         json.dump(filtered_stats, fw)

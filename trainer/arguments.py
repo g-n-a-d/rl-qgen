@@ -247,7 +247,7 @@ class GenerationArguments:
     )
 
     do_sample: bool = field(
-        default=16, metadata={"help": "whether to do sample"}
+        default=False, metadata={"help": "whether to do sample"}
     )
 
     temperature: Optional[float] = field(
