@@ -158,7 +158,7 @@ model_reward = AutoModelForSequenceClassification.from_pretrained(script_args.re
 
 def get_reward(inputs):
     input_ids = tokenizer_reward(inputs, padding=True, truncation=True, max_length=script_args.max_reward_input_length)
-    scores = model(**input_ids).logits
+    scores = model_reward(**input_ids).logits
     return [torch.tensor(score.item()) for score in scores]
 
 
