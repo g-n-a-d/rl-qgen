@@ -17,6 +17,7 @@ from peft import LoraConfig
 import transformers
 from transformers import (
     AutoTokenizer,
+    AutoConfig,
     AutoModelForSequenceClassification,
     HfArgumentParser,
 )
@@ -180,6 +181,8 @@ else:
 
 
 # One should customize this function to train the model on its own dataset.
+prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
+
 def preprocess_function(examples):
     inputs = []
     for i in range(len(examples[context_column])):
