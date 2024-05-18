@@ -180,47 +180,26 @@ else:
 
 
 # One should customize this function to train the model on its own dataset.
-def build_dataset(data_args):
-    """
-    Build dataset for training. One should customize this function
-    to train the model on its own dataset.
+def preprocess_function(examples):
+    inputs = []
+    for i in range(len(examples[context_column])):
+        if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
+            inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i]))
 
-    Args:
-        query_dataset (`str`):
-            The name of the dataset to be loaded.
+    padding = "max_length" if data_args.pad_to_max_length else False
 
-    Returns:
-        dataloader (`torch.utils.data.DataLoader`):
-            The dataloader for the dataset.
-    """
+    inputs = [data_args.prefix + inp for inp in inputs]
+    model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
 
-    def preprocess_function(examples):
-        # remove pairs where at least one record is None
+    return model_inputs
 
-        inputs = []
-        for i in range(len(examples[context_column])):
-            if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i]))
-
-        padding = "max_length" if data_args.pad_to_max_length else False
-
-        inputs = [data_args.prefix + inp for inp in inputs]
-        model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
-
-        return model_inputs
-
-    ds = raw_ds.map(
-        preprocess_function,
-        batched=True,
-        num_proc=data_args.preprocessing_num_workers,
-        load_from_cache_file=not data_args.overwrite_cache,
-        desc="Running tokenizer on train dataset",
-    )
-
-    return ds
-
-# We retrieve the dataloader by calling the `build_dataset` function.
-dataset = build_dataset(data_args)
+dataset = raw_ds.map(
+    preprocess_function,
+    batched=True,
+    num_proc=data_args.preprocessing_num_workers,
+    load_from_cache_file=not data_args.overwrite_cache,
+    desc="Running tokenizer on train dataset",
+)
 
 def collator(data):
 
