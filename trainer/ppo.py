@@ -245,7 +245,7 @@ dataset.set_format("torch")
 
 def collator(data):
 
-    return tokenizer.pad(data, padding=True, return_tensors="pt")
+    return {key: [d[key] for d in data] for key in data[0]}
 
 
 #################
