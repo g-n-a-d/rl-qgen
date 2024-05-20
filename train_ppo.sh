@@ -20,4 +20,4 @@ accelerate launch \
     --batch_size 128 \
     --mini_batch_size 2 \
     --gradient_accumulation_steps 8 \
-    --ppo_epochs 5 \
+    --ppo_epochs 5

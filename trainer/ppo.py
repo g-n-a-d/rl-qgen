@@ -153,14 +153,6 @@ model = trl_model_class.from_pretrained(
     peft_config=peft_config,
 )
 
-tokenizer_reward = AutoTokenizer.from_pretrained(script_args.reward_model_name_or_path)
-model_reward = AutoModelForSequenceClassification.from_pretrained(script_args.reward_model_name_or_path)
-
-def get_reward(inputs):
-    input_ids = tokenizer_reward(inputs, padding=True, truncation=True, max_length=script_args.max_reward_input_length, return_tensors="pt")
-    scores = model_reward(**input_ids).logits
-    return [torch.tensor(score.item()) for score in scores]
-
 
 #################
 # Data
@@ -255,6 +247,21 @@ def collator(data):
 ppo_trainer = PPOTrainer(ppo_config, model, ref_model, tokenizer, dataset=dataset, data_collator=collator)
 
 
+#################
+# Reward model
+#################
+tokenizer_reward = AutoTokenizer.from_pretrained(script_args.reward_model_name_or_path)
+model_reward = AutoModelForSequenceClassification.from_pretrained(script_args.reward_model_name_or_path, device_map={"": ppo_trainer.accelerator.process_index})
+
+def get_reward(inputs):
+    with ppo_trainer.accelerator.split_between_processes(inputs) as inps:
+        input_ids = tokenizer_reward(inps, padding=True, truncation=True, max_length=script_args.max_reward_input_length, return_tensors="pt").to("cuda")
+        scores = model_reward(**input_ids).logits
+    return [torch.tensor(score.item()) for score in scores]
+
+
+ppo_trainer.accelerator.wait_for_everyone()
+
 for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
     query_tensors = batch["input_ids"]
 
@@ -321,12 +328,12 @@ for _epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
     logger.info("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
     print("Training stats: \n{}".format(json.dumps(filtered_stats, indent=4)))
     logger.info("Batch stats: {}".format(json.dumps(
-        list(zip(batch["context"], batch["answer"], batch["response"], batch["ref_response"])),
+        list(zip(batch["context"], batch["answer"], batch["question"], batch["response"], batch["ref_response"])),
         ensure_ascii=False,
         indent=4
     )))
     print("Batch stats: {}".format(json.dumps(
-        list(zip(batch["context"], batch["answer"], batch["response"], batch["ref_response"])),
+        list(zip(batch["context"], batch["answer"], batch["question"], batch["response"], batch["ref_response"])),
         ensure_ascii=False,
         indent=4
     )))

@@ -2,8 +2,8 @@
 
 accelerate launch \
     --config_file ./config/multi_gpu.yaml \
-    ./trainer/seq2seq.py \
-    --model_name_or_path VietAI/vit5-base \
+    ./trainer/dpo.py \
+    --model_name_or_path ... \
     --lang vietnamese \
     --context_column context \
     --question_column question \
