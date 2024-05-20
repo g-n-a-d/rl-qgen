@@ -1,6 +1,8 @@
 import logging
-import multiprocessing
 import os
+import sys
+sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
+import multiprocessing
 from contextlib import nullcontext
 
 from trl.commands.cli_utils import init_zero_verbose, TrlParser
