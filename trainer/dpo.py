@@ -27,14 +27,39 @@ from trl import (
     get_quantization_config,
 )
 
-from arguments import ModelArguments, DataTrainingArguments, GenerationArguments
+from dataclasses import dataclass, field
+from typing import Optional
+
+from arguments import ModelArguments
 from utils.data_utils import make_prompt
 
 logging.basicConfig(format=FORMAT, datefmt="[%X]", handlers=[RichHandler()], level=logging.INFO)
 
 
+@dataclass
+class DataArguments:
+    """
+    Arguments pertaining to what data we are going to input our model for training and eval.
+    """
+
+    dataset_name: Optional[str] = field(
+        default=None, metadata={"help": "The name of the dataset to use (via the datasets library)."}
+    )
+    train_file: Optional[str] = field(
+        default=None, metadata={"help": "The input training data file (a jsonlines or csv file)."}
+    )
+    validation_file: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "An optional input evaluation data file to evaluate the metrics (rouge) on (a jsonlines or csv file)."
+            )
+        },
+    )
+
+
 if __name__ == "__main__":
-    parser = TrlParser((DPOConfig, ModelArguments, DataTrainingArguments))
+    parser = TrlParser((DPOConfig, ModelArguments, DataArguments))
     training_args, model_args, data_args = parser.parse_args_and_config()
 
     training_args.disable_tqdm = True
@@ -72,7 +97,6 @@ if __name__ == "__main__":
         # Downloading and loading a dataset from the hub.
         dataset = load_dataset(
             data_args.dataset_name,
-            data_args.dataset_config_name,
             cache_dir=model_args.cache_dir,
             token=model_args.token,
         )
