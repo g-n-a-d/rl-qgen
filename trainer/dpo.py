@@ -15,7 +15,7 @@ from rich.logging import RichHandler
 
 import torch
 from datasets import load_dataset
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from trl import (
     DPOConfig,
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-    model = AutoModelForSeq2SeqLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
