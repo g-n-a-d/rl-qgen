@@ -3,14 +3,9 @@
 accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/dpo.py \
-    --model_name_or_path ... \
-    --lang vietnamese \
-    --context_column context \
-    --question_column question \
-    --answer_column answer \
+    --model_name_or_path gnad/qgen-vit5-base \
     --train_file ./data/processed/train.jsonl \
     --validation_file ./data/processed/dev.jsonl \
-    --test_file ./data/processed/test.jsonl \
     --max_source_length 1024 \
     --max_target_length 128 \
     --output_dir ./outputs/ \
@@ -18,10 +13,10 @@ accelerate launch \
     --do_eval \
     --evaluation_strategy steps \
     --eval_steps 400 \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 2 \
-    --learning_rate 3e-4 \
+    --per_device_train_batch_size 2 \
+    --per_device_eval_batch_size 2 \
+    --gradient_accumulation_steps 8 \
+    --learning_rate 1e-5 \
     --num_train_epochs 8 \
     --logging_strategy steps \
     --logging_steps 25 \
@@ -29,5 +24,4 @@ accelerate launch \
     --save_step 400 \
     --save_total_limit 5 \
     --load_best_model_at_end True \
-    --report_to none \
-    --predict_with_generate True
+    --report_to none

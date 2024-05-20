@@ -3,7 +3,7 @@ import multiprocessing
 import os
 from contextlib import nullcontext
 
-from trl.commands.cli_utils import DPOScriptArguments, init_zero_verbose, TrlParser
+from trl.commands.cli_utils import init_zero_verbose, TrlParser
 
 init_zero_verbose()
 FORMAT = "%(message)s"
@@ -32,8 +32,8 @@ logging.basicConfig(format=FORMAT, datefmt="[%X]", handlers=[RichHandler()], lev
 
 
 if __name__ == "__main__":
-    parser = TrlParser((DPOScriptArguments, DPOConfig, ModelArguments, DataTrainingArguments))
-    args, training_args, model_args, data_args = parser.parse_args_and_config()
+    parser = TrlParser((DPOConfig, ModelArguments, DataTrainingArguments))
+    training_args, model_args, data_args = parser.parse_args_and_config()
 
     training_args.disable_tqdm = True
     console = Console()
