@@ -40,7 +40,6 @@ def main():
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     # Force use our print callback
-    training_args.disable_tqdm = True
     log_level = training_args.get_process_log_level()
     logger.setLevel(log_level)
     datasets.utils.logging.set_verbosity(log_level)
