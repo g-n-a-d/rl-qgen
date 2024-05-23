@@ -32,12 +32,6 @@ init_zero_verbose()
 FORMAT = "%(message)s"
 logger = logging.getLogger(__name__)
 logging.basicConfig(format=FORMAT, datefmt="[%X]", handlers=[RichHandler()], level=logging.INFO)
-log_level = training_args.get_process_log_level()
-logger.setLevel(log_level)
-datasets.utils.logging.set_verbosity(log_level)
-transformers.utils.logging.set_verbosity(log_level)
-transformers.utils.logging.enable_default_handler()
-transformers.utils.logging.enable_explicit_format()
 console = Console()
 
 
@@ -47,6 +41,12 @@ def main():
 
     # Force use our print callback
     training_args.disable_tqdm = True
+    log_level = training_args.get_process_log_level()
+    logger.setLevel(log_level)
+    datasets.utils.logging.set_verbosity(log_level)
+    transformers.utils.logging.set_verbosity(log_level)
+    transformers.utils.logging.enable_default_handler()
+    transformers.utils.logging.enable_explicit_format()
 
 
     #################
