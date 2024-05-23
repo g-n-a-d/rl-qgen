@@ -15,6 +15,8 @@ accelerate launch \
     --do_eval \
     --evaluation_strategy steps \
     --eval_steps 200 \
+    --fp16 \
+    --fp16_full_eval \
     --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 16 \
