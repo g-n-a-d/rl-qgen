@@ -170,39 +170,6 @@ def main():
     #################
     # Training
     #################
-    metric = evaluate.load("rouge", cache_dir=model_args.cache_dir)
-
-    def postprocess_text(preds, labels):
-        preds = [pred.strip() for pred in preds]
-        labels = [label.strip() for label in labels]
-
-        # rougeLSum expects newline after each sentence
-        preds = ["\n".join(nltk.sent_tokenize(pred)) for pred in preds]
-        labels = ["\n".join(nltk.sent_tokenize(label)) for label in labels]
-
-        return preds, labels
-
-    def compute_metrics(eval_preds):
-        preds, labels = eval_preds
-        if isinstance(preds, tuple):
-            preds = preds[0]
-        # Replace -100s used for padding as we can't decode them
-        preds = np.where(preds != -100, preds, tokenizer.pad_token_id)
-        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
-        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-
-        # Some simple post-processing
-        decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
-
-        result = metric.compute(predictions=decoded_preds, references=decoded_labels, use_stemmer=True)
-        result = {k: round(v * 100, 4) for k, v in result.items()}
-        prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in preds]
-        result["gen_len"] = np.mean(prediction_lens)
-        
-        return result
-    
-
     with console.status("[bold green]Initializing the SFTTrainer..."):
         trainer = Trainer(
             model=model,
@@ -211,8 +178,7 @@ def main():
             eval_dataset=eval_dataset if training_args.do_eval else None,
             tokenizer=tokenizer,
             data_collator=data_collator,
-            # compute_metrics=compute_metrics,
-            # callbacks=[RichProgressCallback],
+            callbacks=[RichProgressCallback],
         )
 
 
@@ -268,28 +234,6 @@ def main():
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
 
-    if training_args.do_predict:
-        logger.info("*** Predict ***")
-        predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict")
-        metrics = predict_results.metrics
-        max_predict_samples = (
-            data_args.max_predict_samples if data_args.max_predict_samples is not None else len(predict_dataset)
-        )
-        metrics["predict_samples"] = min(max_predict_samples, len(predict_dataset))
-
-        trainer.log_metrics("predict", metrics)
-        trainer.save_metrics("predict", metrics)
-
-        if trainer.is_world_process_zero():
-            predictions = predict_results.predictions
-            predictions = np.where(predictions != -100, predictions, tokenizer.pad_token_id)
-            predictions = tokenizer.batch_decode(
-                predictions, skip_special_tokens=True, clean_up_tokenization_spaces=True
-            )
-            predictions = [pred.strip() for pred in predictions]
-            output_prediction_file = os.path.join(training_args.output_dir, "generated_predictions.txt")
-            with open(output_prediction_file, "w") as writer:
-                writer.write("\n".join(predictions))
 
 if __name__ == "__main__":
     main()
