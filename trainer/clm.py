@@ -217,7 +217,7 @@ def main():
             eval_dataset=eval_dataset,
             tokenizer=tokenizer,
             data_collator=data_collator,
-            compute_metrics=compute_metrics if training_args.predict_with_generate else None,
+            compute_metrics=compute_metrics,
             callbacks=[RichProgressCallback],
         )
 
