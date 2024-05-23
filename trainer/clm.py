@@ -53,11 +53,6 @@ def main():
     #################
     # Model & Tokenizer
     #################
-    torch_dtype = (
-        model_args.torch_dtype
-        if model_args.torch_dtype in ["auto", None]
-        else getattr(torch, model_args.torch_dtype)
-    )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -68,7 +63,6 @@ def main():
     )
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
-        torch_dtype=torch_dtype,
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         token=model_args.token,
