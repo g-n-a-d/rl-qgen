@@ -2,12 +2,10 @@ import logging
 import os
 import sys
 sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
-from contextlib import nullcontext
 
 from rich.console import Console
 from rich.logging import RichHandler
 
-import numpy as np
 import torch
 
 from transformers import (
@@ -20,16 +18,9 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 
 from datasets import load_dataset
-import nltk
-import evaluate
 
-from trl import (
-    ModelConfig,
-    RichProgressCallback,
-    SFTConfig,
-    DataCollatorForCompletionOnlyLM
-)
-from trl.commands.cli_utils import init_zero_verbose, SFTScriptArguments, TrlParser
+from trl import DataCollatorForCompletionOnlyLM
+from trl.commands.cli_utils import init_zero_verbose
 
 from trainer.arguments import ModelArguments, DataTrainingArguments
 from utils.data_utils import make_prompt
@@ -178,7 +169,6 @@ def main():
             eval_dataset=eval_dataset if training_args.do_eval else None,
             tokenizer=tokenizer,
             data_collator=data_collator,
-            callbacks=[RichProgressCallback],
         )
 
 
