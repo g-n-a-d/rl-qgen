@@ -212,7 +212,7 @@ def main():
             tokenizer=tokenizer,
             data_collator=data_collator,
             compute_metrics=compute_metrics,
-            callbacks=[RichProgressCallback],
+            # callbacks=[RichProgressCallback],
         )
 
 
