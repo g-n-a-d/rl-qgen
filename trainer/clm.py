@@ -8,6 +8,7 @@ from rich.logging import RichHandler
 
 import torch
 
+import transformers
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
@@ -17,6 +18,7 @@ from transformers import (
 )
 from transformers.trainer_utils import get_last_checkpoint
 
+import datasets
 from datasets import load_dataset
 
 from trl import DataCollatorForCompletionOnlyLM
@@ -30,6 +32,12 @@ init_zero_verbose()
 FORMAT = "%(message)s"
 logger = logging.getLogger(__name__)
 logging.basicConfig(format=FORMAT, datefmt="[%X]", handlers=[RichHandler()], level=logging.INFO)
+log_level = training_args.get_process_log_level()
+logger.setLevel(log_level)
+datasets.utils.logging.set_verbosity(log_level)
+transformers.utils.logging.set_verbosity(log_level)
+transformers.utils.logging.enable_default_handler()
+transformers.utils.logging.enable_explicit_format()
 console = Console()
 
 
