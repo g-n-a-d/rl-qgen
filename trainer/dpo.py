@@ -30,8 +30,9 @@ from trl import (
 from dataclasses import dataclass, field
 from typing import Optional
 
-from arguments import ModelArguments
+from trainer.arguments import ModelArguments
 from utils.data_utils import make_prompt
+
 
 logging.basicConfig(format=FORMAT, datefmt="[%X]", handlers=[RichHandler()], level=logging.INFO)
 
@@ -118,6 +119,7 @@ if __name__ == "__main__":
 
     train_dataset = dataset["train"]
     eval_dataset = dataset["validation"]
+
 
     #################
     # Training

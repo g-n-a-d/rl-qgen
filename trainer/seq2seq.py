@@ -61,15 +61,6 @@ def main():
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
-    if model_args.use_auth_token is not None:
-        warnings.warn(
-            "The `use_auth_token` argument is deprecated and will be removed in v4.34. Please use `token` instead.",
-            FutureWarning,
-        )
-        if model_args.token is not None:
-            raise ValueError("`token` and `use_auth_token` are both specified. Please set only the argument `token`.")
-        model_args.token = model_args.use_auth_token
-
     # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
     # information sent is the one passed as arguments along with your Python/PyTorch versions.
     send_example_telemetry("run_question_generation", model_args, data_args)
@@ -205,21 +196,11 @@ def main():
         hasattr(model.config, "max_position_embeddings")
         and model.config.max_position_embeddings < data_args.max_source_length
     ):
-        if model_args.resize_position_embeddings is None:
-            logger.warning(
-                "Increasing the model's number of position embedding vectors from"
-                f" {model.config.max_position_embeddings} to {data_args.max_source_length}."
-            )
-            model.resize_position_embeddings(data_args.max_source_length)
-        elif model_args.resize_position_embeddings:
-            model.resize_position_embeddings(data_args.max_source_length)
-        else:
-            raise ValueError(
-                f"`--max_source_length` is set to {data_args.max_source_length}, but the model only has"
-                f" {model.config.max_position_embeddings} position encodings. Consider either reducing"
-                f" `--max_source_length` to {model.config.max_position_embeddings} or to automatically resize the"
-                " model's position encodings by passing `--resize_position_embeddings`."
-            )
+        logger.warning(
+            "Increasing the model's number of position embedding vectors from"
+            f" {model.config.max_position_embeddings} to {data_args.max_source_length}."
+        )
+        model.resize_position_embeddings(data_args.max_source_length)
 
     prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
 

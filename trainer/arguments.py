@@ -37,12 +37,6 @@ class ModelArguments:
             )
         },
     )
-    use_auth_token: bool = field(
-        default=None,
-        metadata={
-            "help": "The `use_auth_token` argument is deprecated and will be removed in v4.34. Please use `token` instead."
-        },
-    )
     trust_remote_code: bool = field(
         default=False,
         metadata={
@@ -50,15 +44,6 @@ class ModelArguments:
                 "Whether or not to allow for custom models defined on the Hub in their own modeling files. This option "
                 "should only be set to `True` for repositories you trust and in which you have read the code, as it will "
                 "execute code present on the Hub on your local machine."
-            )
-        },
-    )
-    resize_position_embeddings: Optional[bool] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Whether to automatically resize the position embeddings if `max_source_length` exceeds "
-                "the model's position embeddings."
             )
         },
     )
@@ -199,13 +184,11 @@ class DataTrainingArguments:
         default=None, metadata={"help": "A prefix to add before every source text (useful for T5 models)."}
     )
 
-    forced_bos_token: Optional[str] = field(
-        default=None,
+    response_template: Optional[str] = field(
+        default="### CÂU HỎI:",
         metadata={
             "help": (
-                "The token to force as the first generated token after the decoder_start_token_id. "
-                "Useful for multilingual models like mBART where the first generated token"
-                "needs to be the target language token (Usually it is the target language token)"
+                "The string to separate prompt and response."
             )
         },
     )

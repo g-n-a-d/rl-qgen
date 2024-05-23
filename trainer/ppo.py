@@ -25,7 +25,7 @@ from transformers import (
 from trl import AutoModelForSeq2SeqLMWithValueHead, PPOConfig, PPOTrainer, set_seed
 from trl.core import LengthSampler
 
-from arguments import ModelArguments, DataTrainingArguments, GenerationArguments
+from trainer.arguments import ModelArguments, DataTrainingArguments, GenerationArguments
 from utils.data_utils import make_prompt, make_reward_input
 
 
