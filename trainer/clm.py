@@ -44,7 +44,7 @@ console = Console()
 
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
-    model_args, data_args, training_args = parser.parse_args_and_config()
+    model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     # Force use our print callback
     training_args.disable_tqdm = True
