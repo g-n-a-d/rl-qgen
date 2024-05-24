@@ -20,9 +20,6 @@ class ModelArguments:
         default=None,
         metadata={"help": "Where to store the pretrained models downloaded from huggingface.co"},
     )
-    use_peft: bool = field(
-        default=False, metadata={"help": "Whether to use peft."},
-    )
     use_fast_tokenizer: bool = field(
         default=True,
         metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
@@ -49,6 +46,28 @@ class ModelArguments:
                 "execute code present on the Hub on your local machine."
             )
         },
+    )
+    use_peft: bool = field(
+        default=False,
+        metadata={"help": ("Whether to use PEFT or not for training.")},
+    )
+    lora_r: Optional[int] = field(
+        default=32,
+        metadata={"help": ("LoRA R value.")},
+    )
+    lora_alpha: Optional[int] = field(
+        default=32,
+        metadata={"help": ("LoRA alpha.")},
+    )
+    lora_dropout: Optional[float] = field(
+        default=0.05,
+        metadata={"help": ("LoRA dropout.")},
+    )
+    load_in_8bit: bool = field(
+        default=False, metadata={"help": "use 8 bit precision for the base model - works only with LoRA"}
+    )
+    load_in_4bit: bool = field(
+        default=False, metadata={"help": "use 4 bit precision for the base model - works only with LoRA"}
     )
 
 

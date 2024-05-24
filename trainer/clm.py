@@ -21,10 +21,9 @@ from transformers.trainer_utils import get_last_checkpoint
 import datasets
 from datasets import load_dataset
 
-from trl import DataCollatorForCompletionOnlyLM
+from trl import DataCollatorForCompletionOnlyLM, get_peft_config, get_quantization_config
 from trl.commands.cli_utils import init_zero_verbose
 
-from transformers import BitsAndBytesConfig
 from peft import get_peft_model, LoraConfig, TaskType
 
 from trainer.arguments import ModelArguments, DataTrainingArguments
@@ -39,8 +38,8 @@ console = Console()
 
 
 def main():
-    parser = HfArgumentParser((ModelArguments, BitsAndBytesConfig, LoraConfig, DataTrainingArguments, TrainingArguments))
-    model_args, q_config, peft_config, data_args, training_args = parser.parse_args_into_dataclasses()
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     log_level = training_args.get_process_log_level()
     logger.setLevel(log_level)
@@ -63,14 +62,14 @@ def main():
     )
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
-        quantization_config=q_config,
+        quantization_config=get_quantization_config(model_args) if model_args.use_peft else None,
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
     if model_args.use_peft:
-        model = get_peft_model(model, peft_config)
+        model = get_peft_model(model, get_peft_config(model_args))
 
 
     #################
