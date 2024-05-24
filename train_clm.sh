@@ -4,6 +4,7 @@ accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/clm.py \
     --model_name_or_path bigscience/bloomz-560m \
+    --use_peft True\
     --context_column context \
     --question_column question \
     --answer_column answer \

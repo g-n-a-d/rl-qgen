@@ -24,8 +24,11 @@ from datasets import load_dataset
 from trl import DataCollatorForCompletionOnlyLM
 from trl.commands.cli_utils import init_zero_verbose
 
+from transformers import BitsAndBytesConfig
+from peft import get_peft_model, LoraConfig, TaskType
+
 from trainer.arguments import ModelArguments, DataTrainingArguments
-from utils.data_utils import make_prompt
+from utils.data_utils import make_prompt_
 
 
 init_zero_verbose()
@@ -36,10 +39,9 @@ console = Console()
 
 
 def main():
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
-    model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    parser = HfArgumentParser((ModelArguments, BitsAndBytesConfig, LoraConfig, DataTrainingArguments, TrainingArguments))
+    model_args, q_config, peft_config, data_args, training_args = parser.parse_args_into_dataclasses()
 
-    # Force use our print callback
     log_level = training_args.get_process_log_level()
     logger.setLevel(log_level)
     datasets.utils.logging.set_verbosity(log_level)
@@ -61,11 +63,15 @@ def main():
     )
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
+        quantization_config=q_config,
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
+    if model_args.use_peft:
+        model = get_peft_model(model, peft_config)
+
 
     #################
     # Dataset
@@ -107,7 +113,7 @@ def main():
         inputs = []
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i]))
+                inputs.append(make_prompt_(examples[context_column][i], examples[answer_column][i], examples[question_column][i]))
 
         inputs = [prefix + inp for inp in inputs]
         model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
