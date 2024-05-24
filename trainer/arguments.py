@@ -63,6 +63,9 @@ class ModelArguments:
         default=0.05,
         metadata={"help": ("LoRA dropout.")},
     )
+    lora_task_type: str = field(
+        default="CAUSAL_LM", metadata={"help": "The task_type to pass for LoRA (use SEQ_CLS for reward modeling)"}
+    )
     load_in_8bit: bool = field(
         default=False, metadata={"help": "use 8 bit precision for the base model - works only with LoRA"}
     )
