@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 
 @dataclass
 class ModelArguments:
@@ -65,6 +65,14 @@ class ModelArguments:
     )
     lora_task_type: str = field(
         default="CAUSAL_LM", metadata={"help": "The task_type to pass for LoRA (use SEQ_CLS for reward modeling)"}
+    )
+    lora_target_modules: Optional[List[str]] = field(
+        default=None,
+        metadata={"help": ("LoRA target modules.")},
+    )
+    lora_modules_to_save: Optional[List[str]] = field(
+        default=None,
+        metadata={"help": ("Model layers to unfreeze & train")},
     )
     load_in_8bit: bool = field(
         default=False, metadata={"help": "use 8 bit precision for the base model - works only with LoRA"}
