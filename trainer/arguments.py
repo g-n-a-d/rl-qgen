@@ -60,7 +60,7 @@ class ModelArguments:
         metadata={"help": ("LoRA alpha.")},
     )
     lora_dropout: Optional[float] = field(
-        default=0.05,
+        default=0.0,
         metadata={"help": ("LoRA dropout.")},
     )
     lora_task_type: str = field(
@@ -218,7 +218,7 @@ class DataTrainingArguments:
     )
 
     response_template: Optional[str] = field(
-        default="### CÂU HỎI:",
+        default="### Câu hỏi:",
         metadata={
             "help": (
                 "The string to separate prompt and response."
