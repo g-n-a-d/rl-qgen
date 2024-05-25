@@ -197,6 +197,7 @@ def main():
 
     def compute_metrics(eval_preds):
         preds, labels = eval_preds
+        print(preds, labels)
         if isinstance(preds, tuple):
             preds = preds[0]
         # Replace -100s used for padding as we can't decode them
@@ -285,7 +286,10 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-
+        if model_args.use_peft and model_args.adapter_name_or_path is None:
+            raise ValueError(
+                "Can not predict with no adapter passed."
+            )
         predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict")
         metrics = predict_results.metrics
         max_predict_samples = (
