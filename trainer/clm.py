@@ -224,7 +224,7 @@ def main():
             eval_dataset=eval_dataset if training_args.do_eval else None,
             tokenizer=tokenizer,
             data_collator=data_collator,
-            compute_metrics=compute_metrics,
+            # compute_metrics=compute_metrics,
         )
 
 
