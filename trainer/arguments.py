@@ -74,11 +74,8 @@ class ModelArguments:
         default=None,
         metadata={"help": ("Model layers to unfreeze & train")},
     )
-    load_in_8bit: bool = field(
-        default=False, metadata={"help": "use 8 bit precision for the base model - works only with LoRA"}
-    )
-    load_in_4bit: bool = field(
-        default=False, metadata={"help": "use 4 bit precision for the base model - works only with LoRA"}
+    adapter_name_or_path: Optional[str] = field(
+        default=None, metadata={"help": "Path to pretrained adapter or adapter identifier from huggingface.co/models"}
     )
 
 
