@@ -21,6 +21,7 @@ from transformers.trainer_utils import get_last_checkpoint
 
 import datasets
 from datasets import load_dataset
+import evaluate
 import nltk
 try:
     nltk.data.find("tokenizers/punkt")
