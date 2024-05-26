@@ -183,6 +183,14 @@ def main():
     # Training
     #################
     # Metric
+    def preprocess_logits(logits, labels):
+        """
+        Original Trainer may have a memory leak. 
+        This is a workaround to avoid storing too many tensors that are not needed.
+        """
+        pred_ids = torch.argmax(logits[0], dim=-1)
+        return pred_ids, labels
+
     metric = evaluate.load("rouge", cache_dir=model_args.cache_dir)
 
     def postprocess_text(preds, labels):
@@ -223,7 +231,8 @@ def main():
             eval_dataset=eval_dataset if training_args.do_eval else None,
             tokenizer=tokenizer,
             data_collator=data_collator,
-            # compute_metrics=compute_metrics,
+            compute_metrics=compute_metrics,
+            preprocess_logits_for_metrics=preprocess_logits,
         )
 
 
