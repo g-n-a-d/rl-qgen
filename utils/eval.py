@@ -57,10 +57,11 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
             top_p=args.top_p,
         )
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        print(i)
-        for o in outputs:
-            print(o)
+
         for ii in range(min(args.eval_batch_size, len(text) - i)):
+            print(i + ii)
+            print(outputs[ii])
+            print(text[i + ii]["question"])
             score = scorer.score(text[i + ii]["question"], outputs[ii].split("### Câu hỏi: ")[1])
             print(score)
             rougeL_pre.append(score["rougeL"].precision)
