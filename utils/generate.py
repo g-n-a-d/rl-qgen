@@ -38,8 +38,8 @@ with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.out
         text.append(line)
     
     rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
-    for i in tqdm(range(0, len(text), args.eval_batch_size), desc ="Generating:"):
-        inputs = [make_prompt(text[i + ii]["context"], text[i + ii]["answer"]) for ii in range(min(args.eval_batch_size, len(text) - i))] 
+    for i in tqdm(range(0, len(text), args.gen_batch_size), desc ="Generating:"):
+        inputs = [make_prompt(text[i + ii]["context"], text[i + ii]["answer"]) for ii in range(min(args.gen_batch_size, len(text) - i))] 
         input_ids = tokenizer(inputs, max_length=1024, padding=True, truncation=True, return_tensors="pt").to(device)
         preds = model.generate(
             **input_ids,
@@ -52,7 +52,7 @@ with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.out
         )
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
 
-        for ii in range(min(args.eval_batch_size, len(text) - i)):
+        for ii in range(min(args.gen_batch_size, len(text) - i)):
             line_ = {}
             line_["context"] = text[i + ii]["context"]
             line_["answer"] = text[i + ii]["answer"]
