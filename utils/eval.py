@@ -60,6 +60,7 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
         print(i)
         for o in outputs:
             print(o)
+            print(o.split("### Câu hỏi:")[1])
         for ii in range(min(args.eval_batch_size, len(text) - i)):
             score = scorer.score(text[ii]["question"], outputs[ii].split("### Câu hỏi:")[1])
             rougeL_pre.append(score["rougeL"].precision)
