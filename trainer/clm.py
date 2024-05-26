@@ -188,7 +188,7 @@ def main():
         Original Trainer may have a memory leak. 
         This is a workaround to avoid storing too many tensors that are not needed.
         """
-        pred_ids = torch.argmax(logits[0], dim=-1)
+        pred_ids = torch.argmax(logits, dim=-1)
         return pred_ids, labels
 
     metric = evaluate.load("rouge", cache_dir=model_args.cache_dir)
