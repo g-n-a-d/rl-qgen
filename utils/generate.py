@@ -57,5 +57,5 @@ with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.out
             line_["context"] = text[i + ii]["context"]
             line_["answer"] = text[i + ii]["answer"]
             line_["target"] = text[i + ii]["question"]
-            line_["pred"] = outputs[ii]
+            line_["pred"] = outputs[ii].split("### Câu hỏi: ")[1]
             fw.write(line_)
