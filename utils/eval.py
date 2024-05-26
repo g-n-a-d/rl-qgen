@@ -67,8 +67,6 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
             rougeL_pre.append(score["rougeL"].precision)
             rougeL_rec.append(score["rougeL"].recall)
             rougeL_f1.append(score["rougeL"].fmeasure)
-        if i > 50:
-            break
 
 print("#### Overall Mean Rouge-L Scores ####")
 print('Precision: {:.4f}'.format(sum(rougeL_pre)/len(rougeL_pre)))
