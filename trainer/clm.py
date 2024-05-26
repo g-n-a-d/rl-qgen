@@ -188,10 +188,8 @@ def main():
         Original Trainer may have a memory leak. 
         This is a workaround to avoid storing too many tensors that are not needed.
         """
-        print(logits, labels)
-        print(logits.shape, labels.shape)
-        pred_ids = torch.argmax(logits, dim=-1)
-        return pred_ids
+        logits = torch.argmax(logits, dim=-1)
+        return logits
 
     metric = evaluate.load("rouge", cache_dir=model_args.cache_dir)
 
@@ -207,6 +205,7 @@ def main():
 
     def compute_metrics(eval_preds):
         preds, labels = eval_preds
+        print(preds, labels)
         if isinstance(preds, tuple):
             preds = preds[0]
         # Replace -100s used for padding as we can't decode them
