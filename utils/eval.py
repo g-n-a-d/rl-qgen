@@ -45,7 +45,7 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
     
     rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
     for i in range(0, len(text), 8):
-        inputs = [make_prompt(text[i + g]["context"], text[i + g]["answer"]) for g in range(8)] 
+        inputs = [make_prompt(text[i + g]["context"], text[i + g]["answer"]) for g in range(min(8, len(text) - i))] 
         input_ids = tokenizer(inputs, max_length=1024, padding=True, truncation=True, return_tensors="pt").to(device)
         preds = model.generate(
             **input_ids,
