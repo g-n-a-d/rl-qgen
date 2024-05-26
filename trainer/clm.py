@@ -190,7 +190,7 @@ def main():
         """
         print(logits, labels)
         pred_ids = torch.argmax(logits, dim=-1)
-        return pred_ids, labels
+        return pred_ids
 
     metric = evaluate.load("rouge", cache_dir=model_args.cache_dir)
 
