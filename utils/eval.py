@@ -27,6 +27,7 @@ args = parser.parse_args()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+print(tokenizer.padding_side)
 model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path).to(device)
 if args.adapter_name_or_path:
     adapter = model.load_adapter(args.adapter_name_or_path)
@@ -57,6 +58,8 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
             top_k=args.top_k,
             top_p=args.top_p,
         )
+        print(i)
+        print(preds)
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
         for ii in range(args.eval_batch_size):
             score = scorer.score(text[ii]["question"], outputs[ii].split("### Câu hỏi:")[1])
