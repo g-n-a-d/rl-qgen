@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--test_filename", type=str, help="Test file")
 parser.add_argument("--model_name_or_path", type=str, help="Model")
 parser.add_argument("--adapter_name_or_path", type=str, default=None, help="Adapter")
 parser.add_argument("--gen_batch_size", type=int, default=8, help="Evaluation batch size")
@@ -31,7 +32,7 @@ def make_prompt(context, answer):
     
     return prompt
 
-with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.output_filename, mode="w") as fw:
+with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.output_filename, mode="w") as fw:
     text = []
     for line in fr:
         text.append(line)
