@@ -267,8 +267,8 @@ class GenerationArguments:
         default=1.0, metadata={"help": "the temperature parameter"}
     )
 
-    top_k: Optional[float] = field(
-        default=0.0, metadata={"help": "the top_k alpha parameter"}
+    top_k: Optional[int] = field(
+        default=50, metadata={"help": "the top_k parameter"}
     )
 
     top_p: Optional[float] = field(

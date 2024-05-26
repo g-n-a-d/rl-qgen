@@ -71,6 +71,7 @@ def main():
     if model_args.use_peft:
         if model_args.adapter_name_or_path:
             model.load_adapter(model_args.adapter_name_or_path)
+            model.enable_adapters()
         else:
             model = get_peft_model(model, get_peft_config(model_args))
 
@@ -207,10 +208,6 @@ def main():
     # Evaluation
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
-        if model_args.use_peft and model_args.adapter_name_or_path is None:
-            raise ValueError(
-                "Can not eval with no adapter passed."
-            )
         if isinstance(eval_dataset, dict):
             metrics = {}
             for eval_ds_name, eval_ds in eval_dataset.items():
