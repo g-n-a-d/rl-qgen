@@ -58,14 +58,18 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
         )
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
         print(i)
+        for ppp in range(4):
+            print(text[i + ppp]["question"])
         for o in outputs:
             print(o)
-            print(o.split("### Câu hỏi:")[1])
+            print(o.split("### Câu hỏi: ")[1])
         for ii in range(min(args.eval_batch_size, len(text) - i)):
-            score = scorer.score(text[ii]["question"], outputs[ii].split("### Câu hỏi:")[1])
+            score = scorer.score(text[ii]["question"], outputs[ii].split("### Câu hỏi: ")[1])
             rougeL_pre.append(score["rougeL"].precision)
             rougeL_rec.append(score["rougeL"].recall)
             rougeL_f1.append(score["rougeL"].fmeasure)
+        if i > 50:
+            break
 
 print("#### Overall Mean Rouge-L Scores ####")
 print('Precision: {:.4f}'.format(sum(rougeL_pre)/len(rougeL_pre)))
