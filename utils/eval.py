@@ -6,13 +6,12 @@ import jsonlines
 from rouge_score import rouge_scorer
 from copy import deepcopy
 
-from typing import Optional
 import argparse
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name_or_path", type=str, help="Model")
-parser.add_argument("--adapter_name_or_path", type=Optional[str], default=None, help="Adapter")
+parser.add_argument("--adapter_name_or_path", type=str, default=None, help="Adapter")
 parser.add_argument("--eval_filename", type=str, default="./eval.jsonl", help="Evaluation file")
 parser.add_argument("--eval_batch_size", type=int, default=8, help="Evaluation batch size")
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
