@@ -45,7 +45,7 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
     
     rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
     for i in range(0, len(text), args.eval_batch_size):
-        inputs = [make_prompt(text[i + g]["context"], text[i + g]["answer"]) for g in range(min(args.eval_batch_size, len(text) - i))] 
+        inputs = [make_prompt(text[i + ii]["context"], text[i + ii]["answer"]) for ii in range(min(args.eval_batch_size, len(text) - i))] 
         input_ids = tokenizer(inputs, max_length=1024, padding=True, truncation=True, return_tensors="pt").to(device)
         preds = model.generate(
             **input_ids,
@@ -61,7 +61,7 @@ with jsonlines.open(args.eval_filename, mode="r") as fr, jsonlines.open(args.out
         for o in outputs:
             print(o)
         for ii in range(min(args.eval_batch_size, len(text) - i)):
-            score = scorer.score(text[ii]["question"], outputs[ii].split("### Câu hỏi: ")[1])
+            score = scorer.score(text[i + ii]["question"], outputs[ii].split("### Câu hỏi: ")[1])
             print(score)
             rougeL_pre.append(score["rougeL"].precision)
             rougeL_rec.append(score["rougeL"].recall)
