@@ -189,6 +189,7 @@ def main():
         This is a workaround to avoid storing too many tensors that are not needed.
         """
         print(logits, labels)
+        print(logits.shape, labels.shape)
         pred_ids = torch.argmax(logits, dim=-1)
         return pred_ids
 
