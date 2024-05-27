@@ -59,7 +59,7 @@ class DataArguments:
     )
 
 
-if __name__ == "__main__":
+def main():
     parser = TrlParser((DPOConfig, ModelArguments, DataArguments))
     training_args, model_args, data_args = parser.parse_args_and_config()
 
@@ -73,11 +73,14 @@ if __name__ == "__main__":
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         use_fast=model_args.use_fast_tokenizer,
+        revision=model_args.model_revision,
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
+        cache_dir=model_args.cache_dir,
+        revision=model_args.model_revision,
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
@@ -88,7 +91,7 @@ if __name__ == "__main__":
     # Optional rich context managers
     #################
     init_context = console.status("[bold green]Initializing the DPOTrainer...")
-    save_context = console.status(f"[bold green]Training completed! Saving the model to {training_args.output_dir}")
+    save_context = console.status(f"[bold green]Saving the checkpoint to {training_args.output_dir}")
 
 
     #################
@@ -135,7 +138,60 @@ if __name__ == "__main__":
             callbacks=[RichProgressCallback],
         )
 
-    trainer.train()
+    # Detecting last checkpoint.
+    last_checkpoint = None
+    if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
+        last_checkpoint = get_last_checkpoint(training_args.output_dir)
+        if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
+            raise ValueError(
+                f"Output directory ({training_args.output_dir}) already exists and is not empty. "
+                "Use --overwrite_output_dir to overcome."
+            )
+        elif last_checkpoint is not None and training_args.resume_from_checkpoint is None:
+            logger.info(
+                f"Checkpoint detected, resuming training at {last_checkpoint}. To avoid this behavior, change "
+                "the `--output_dir` or add `--overwrite_output_dir` to train from scratch."
+            )
 
-    with save_context:
-        trainer.save_model(training_args.output_dir)
+    # Training
+    if training_args.do_train:
+        logger.info("*** Training ***")
+        checkpoint = None
+        if training_args.resume_from_checkpoint is not None:
+            checkpoint = training_args.resume_from_checkpoint
+        elif last_checkpoint is not None:
+            checkpoint = last_checkpoint
+        train_result = trainer.train(resume_from_checkpoint=checkpoint)
+        trainer.save_model()  # Saves the tokenizer too for easy upload
+
+        metrics = train_result.metrics
+        max_train_samples = (
+            data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+        )
+        metrics["train_samples"] = min(max_train_samples, len(train_dataset))
+
+        with save_context:
+            trainer.log_metrics("train", metrics)
+            trainer.save_metrics("train", metrics)
+            trainer.save_state()
+
+    # Evaluation
+    if training_args.do_eval:
+        logger.info("*** Evaluate ***")
+        if isinstance(eval_dataset, dict):
+            metrics = {}
+            for eval_ds_name, eval_ds in eval_dataset.items():
+                dataset_metrics = trainer.evaluate(eval_dataset=eval_ds, metric_key_prefix=f"eval_{eval_ds_name}")
+                metrics.update(dataset_metrics)
+        else:
+            metrics = trainer.evaluate(metric_key_prefix="eval")
+        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
+        metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
+
+        with save_context:
+            trainer.log_metrics("eval", metrics)
+            trainer.save_metrics("eval", metrics)
+
+
+if __name__ == "__main__":
+    main()
