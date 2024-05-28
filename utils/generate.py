@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
 import jsonlines
 import argparse
 from tqdm import tqdm
@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test_filename", type=str, help="Test file")
 parser.add_argument("--model_name_or_path", type=str, help="Model")
 parser.add_argument("--adapter_name_or_path", type=str, default=None, help="Adapter")
+parser.add_argument("--token", type=str, default=None, help="Token")
 parser.add_argument("--gen_batch_size", type=int, default=8, help="Evaluation batch size")
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
 parser.add_argument("--max_seq_length", type=int, default=1024, help="Max seq length")
@@ -25,7 +26,11 @@ args = parser.parse_args()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
-model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path).to(device)
+config = AutoConfig.from_pretrained(args.model_name_or_path)
+if not config.is_encoder_decoder:
+    model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path).to(device)
+else:
+    model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name_or_path).to(device)
 if args.adapter_name_or_path:
     adapter = model.load_adapter(args.adapter_name_or_path)
 
