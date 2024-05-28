@@ -4,7 +4,7 @@ import jsonlines
 import argparse
 from tqdm import tqdm
 
-from utils.data_utils import make_prompt
+from data_utils import make_prompt
 
 
 parser = argparse.ArgumentParser()
