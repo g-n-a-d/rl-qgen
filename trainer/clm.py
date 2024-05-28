@@ -28,7 +28,7 @@ from trl.commands.cli_utils import init_zero_verbose
 from peft import get_peft_model, LoraConfig, TaskType
 
 from trainer.arguments import ModelArguments, DataTrainingArguments
-from utils.data_utils import make_prompt_
+from utils.data_utils import make_prompt
 
 
 init_zero_verbose()
@@ -112,7 +112,7 @@ def main():
         inputs = []
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inputs.append(make_prompt_(examples[context_column][i], examples[answer_column][i], examples[question_column][i]))
+                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i]))
 
         inputs = [prefix + inp for inp in inputs]
         model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
