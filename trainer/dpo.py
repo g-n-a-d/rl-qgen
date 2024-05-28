@@ -67,7 +67,7 @@ def main():
     parser = TrlParser((ModelArguments, DataArguments, DPOConfig))
     model_args, data_args, training_args = parser.parse_args_and_config()
 
-    training_args.disable_tqdm = True
+    # training_args.disable_tqdm = True
 
 
     #################
@@ -142,7 +142,7 @@ def main():
             eval_dataset=eval_dataset if data_args.validation_file else None,
             tokenizer=tokenizer,
             peft_config=get_peft_config(model_args) if model_args.use_peft else None,
-            callbacks=[RichProgressCallback],
+            # callbacks=[RichProgressCallback],
         )
 
     # Detecting last checkpoint.
