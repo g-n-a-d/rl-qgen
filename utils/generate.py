@@ -33,9 +33,7 @@ if not config.is_encoder_decoder:
 else:
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name_or_path).to(device)
 if args.adapter_name_or_path:
-    # model.load_adapter(args.adapter_name_or_path)
-    model = PeftModel.from_pretrained(model, "gnad/qgen-adapter-bloomz-1b1").merge_and_unload()
-    # model = PeftModel.from_pretrained(model, args.adapter_name_or_path).merge_and_unload()
+    model.load_adapter(args.adapter_name_or_path)
 
 with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.output_filename, mode="w") as fw:
     text = []
