@@ -112,7 +112,8 @@ def main():
         inputs = []
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i]))
+                inp = tokenizer.bos_token + make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i]) + tokenizer.eos_token
+                inputs.append(inp)
 
         inputs = [prefix + inp for inp in inputs]
         model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
@@ -178,25 +179,31 @@ def main():
                 "the `--output_dir` or add `--overwrite_output_dir` to train from scratch."
             )
 
-    # Training
-    logger.info("*** Training ***")
-    checkpoint = None
-    if training_args.resume_from_checkpoint is not None:
-        checkpoint = training_args.resume_from_checkpoint
-    elif last_checkpoint is not None:
-        checkpoint = last_checkpoint
-    train_result = trainer.train(resume_from_checkpoint=checkpoint)
-    trainer.save_model()  # Saves the tokenizer too for easy upload
+    for i in trainer.get_train_dataloader():
+        print(i)
+        print(tokenizer.batch_decode(i["input_ids"]))
+        print(tokenizer.batch_decode(torch.where(i["labels"] == -100, 3, i["labels"])))
+        break
 
-    metrics = train_result.metrics
-    max_train_samples = (
-        data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
-    )
-    metrics["train_samples"] = min(max_train_samples, len(train_dataset))
+    # # Training
+    # logger.info("*** Training ***")
+    # checkpoint = None
+    # if training_args.resume_from_checkpoint is not None:
+    #     checkpoint = training_args.resume_from_checkpoint
+    # elif last_checkpoint is not None:
+    #     checkpoint = last_checkpoint
+    # train_result = trainer.train(resume_from_checkpoint=checkpoint)
+    # trainer.save_model()  # Saves the tokenizer too for easy upload
 
-    trainer.log_metrics("train", metrics)
-    trainer.save_metrics("train", metrics)
-    trainer.save_state()
+    # metrics = train_result.metrics
+    # max_train_samples = (
+    #     data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+    # )
+    # metrics["train_samples"] = min(max_train_samples, len(train_dataset))
+
+    # trainer.log_metrics("train", metrics)
+    # trainer.save_metrics("train", metrics)
+    # trainer.save_state()
 
 
 if __name__ == "__main__":
