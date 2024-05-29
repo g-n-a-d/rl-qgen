@@ -179,31 +179,25 @@ def main():
                 "the `--output_dir` or add `--overwrite_output_dir` to train from scratch."
             )
 
-    for i in trainer.get_train_dataloader():
-        print(i)
-        print(tokenizer.batch_decode(i["input_ids"]))
-        print(tokenizer.batch_decode(torch.where(i["labels"] == -100, 3, i["labels"])))
-        break
+    # Training
+    logger.info("*** Training ***")
+    checkpoint = None
+    if training_args.resume_from_checkpoint is not None:
+        checkpoint = training_args.resume_from_checkpoint
+    elif last_checkpoint is not None:
+        checkpoint = last_checkpoint
+    train_result = trainer.train(resume_from_checkpoint=checkpoint)
+    trainer.save_model()  # Saves the tokenizer too for easy upload
 
-    # # Training
-    # logger.info("*** Training ***")
-    # checkpoint = None
-    # if training_args.resume_from_checkpoint is not None:
-    #     checkpoint = training_args.resume_from_checkpoint
-    # elif last_checkpoint is not None:
-    #     checkpoint = last_checkpoint
-    # train_result = trainer.train(resume_from_checkpoint=checkpoint)
-    # trainer.save_model()  # Saves the tokenizer too for easy upload
+    metrics = train_result.metrics
+    max_train_samples = (
+        data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+    )
+    metrics["train_samples"] = min(max_train_samples, len(train_dataset))
 
-    # metrics = train_result.metrics
-    # max_train_samples = (
-    #     data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
-    # )
-    # metrics["train_samples"] = min(max_train_samples, len(train_dataset))
-
-    # trainer.log_metrics("train", metrics)
-    # trainer.save_metrics("train", metrics)
-    # trainer.save_state()
+    trainer.log_metrics("train", metrics)
+    trainer.save_metrics("train", metrics)
+    trainer.save_state()
 
 
 if __name__ == "__main__":
