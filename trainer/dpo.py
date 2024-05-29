@@ -88,8 +88,6 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-    if model_args.adapter_name_or_path:
-        model = PeftModel.from_pretrained(model, model_args.adapter_name_or_path).merge_and_unload()
     model_ref = None
 
 
