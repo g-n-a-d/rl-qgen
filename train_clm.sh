@@ -3,7 +3,7 @@
 accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/clm.py \
-    --model_name_or_path bigscience/bloomz-560m \
+    --model_name_or_path bigscience/bloomz-1b1 \
     --use_peft True\
     --context_column context \
     --question_column question \
@@ -18,11 +18,13 @@ accelerate launch \
     --eval_steps 200 \
     --fp16 \
     --fp16_full_eval \
-    --per_device_train_batch_size 1 \
-    --per_device_eval_batch_size 1 \
-    --gradient_accumulation_steps 16 \
-    --learning_rate 3e-4 \
-    --num_train_epochs 4 \
+    --per_device_train_batch_size 2 \
+    --per_device_eval_batch_size 2 \
+    --gradient_accumulation_steps 8 \
+    --learning_rate 1e-4 \
+    --num_train_epochs 5 \
+    --lr_scheduler_type cosine \
+    --warmup_ratio 0.1 \
     --logging_strategy steps \
     --logging_steps 25 \
     --save_strategy steps \
