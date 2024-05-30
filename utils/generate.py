@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
-from peft import LoraConfig, get_peft_model, 
+from peft import LoraConfig, get_peft_model
 from accelerate import Accelerator
 import jsonlines
 import argparse
