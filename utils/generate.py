@@ -1,6 +1,7 @@
 import torch
 from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
-from peft import LoraConfig, get_peft_model, PeftModel
+from peft import LoraConfig, get_peft_model, 
+from accelerate import Accelerator
 import jsonlines
 import argparse
 from tqdm import tqdm
@@ -26,6 +27,8 @@ args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+accelerator = Accelerator()
+
 tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
 config = AutoConfig.from_pretrained(args.model_name_or_path)
 if not config.is_encoder_decoder:
@@ -40,7 +43,10 @@ with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.out
     for line in fr:
         text.append(line)
     
-    rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
+accelerator.wait_for_everyone()
+
+rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
+with accelerator.split_between_processes(text) as prompts:
     for i in tqdm(range(0, len(text), args.gen_batch_size), desc ="Generating:"):
         inputs = [tokenizer.bos_token + make_prompt(text[i + ii]["context"], text[i + ii]["answer"], last_space=False) for ii in range(min(args.gen_batch_size, len(text) - i))] 
         input_ids = tokenizer(inputs, max_length=args.max_seq_length, padding=True, truncation=True, return_tensors="pt").to(device)
