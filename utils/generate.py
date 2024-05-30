@@ -59,7 +59,6 @@ with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.out
                 top_k=args.top_k,
                 top_p=args.top_p,
             )
-            print(preds)
             outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
 
             for ii in range(min(args.gen_batch_size, len(text) - i)):
