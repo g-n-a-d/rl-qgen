@@ -4,13 +4,18 @@ accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/clm.py \
     --model_name_or_path bigscience/bloomz-1b1 \
+    --torch_dtype float16 \
     --use_peft True\
+    --lora_r 32 \
+    --lora_alpha 64 \
+    --load_in_4bit True \
+    --use_bnb_nested_quant True \
     --context_column context \
     --question_column question \
     --answer_column answer \
     --train_file ./data/processed/train.jsonl \
     --validation_file ./data/processed/dev.jsonl \
-    --max_source_length 2048 \
+    --max_source_length 1024 \
     --output_dir ./outputs/ \
     --do_train \
     --do_eval \
