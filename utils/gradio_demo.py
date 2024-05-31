@@ -59,7 +59,6 @@ def run_demo():
                 label="Answer",
                 lines=2
             ),
-            gr.Slider(0.1, 1, step=0.1, label='Top-p', value=0.9)
         ],
         outputs=gr.Textbox(label="Question", lines=3)
     )
