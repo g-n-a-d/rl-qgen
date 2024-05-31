@@ -3,7 +3,7 @@ import sys
 sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
 
 import gradio as gr
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, HfArgumentParser
+from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM, AutoModelForSeq2SeqLM, HfArgumentParser
 import argparse
 
 from trainer.arguments import ModelArguments
@@ -15,16 +15,22 @@ def load_args():
     
     return model_args
 
-def load_model(model_name_or_path, token):
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, token=token)  
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path, token=token)
+def load_model(model_args):
+    tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, token=model_args.token)  
+    config = AutoConfig.from_pretrained(model_args.model_name_or_path)
+    if not config.is_encoder_decoder:
+        model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path)
+    else:
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_args.model_name_or_path)
+    if model_args.adapter_name_or_path:
+        model.load_adapter(model_args.adapter_name_or_path)
 
     return model, tokenizer
 
-def infer(model, tokenizer, context, answer, **gen_config):
-    prompt = make_prompt(context=context, answer=answer)
+def infer(model, tokenizer, context, answer):
+    prompt = make_prompt(context=context, answer=answer, last_space=False)
     inputs = tokenizer(prompt, return_tensors="pt")
-    output = model.generate(**inputs, do_sample=True, num_return_sequences=10, min_new_tokens=1, max_new_tokens=32, **gen_config)
+    output = model.generate(**inputs, do_sample=True, num_return_sequences=10, min_new_tokens=1, max_new_tokens=32)
     output_text = "\n".join([tokenizer.decode(output[i], skip_special_tokens=True, clean_up_tokenization_spaces=True) for i in range(10)])
     
     return output_text
@@ -32,13 +38,12 @@ def infer(model, tokenizer, context, answer, **gen_config):
 def run_demo():
     model_args = load_args()
 
-    model, tokenizer = load_model(model_name_or_path=model_args.model_name_or_path, token=model_args.token)
-    pipe = lambda context, answer, top_p : infer(
+    model, tokenizer = load_model(model_args)
+    pipe = lambda context, answer: infer(
         model=model,
         tokenizer=tokenizer,
         context=context,
         answer=answer,
-        **{"top_p" : top_p}
     )
 
     demo = gr.Interface(
