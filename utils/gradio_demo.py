@@ -50,12 +50,12 @@ def run_demo():
         fn=pipe,
         inputs=[
             gr.Textbox(
-                value="Năm 1871, Đức trở thành một quốc gia dân tộc khi hầu hết các quốc gia Đức thống nhất trong Đế quốc Đức do Phổ chi phối. Sau Chiến tranh thế giới thứ nhất và Cách mạng Đức 1918-1919, Đế quốc này bị thay thế bằng Cộng hòa Weimar theo chế độ nghị viện. Chế độ độc tài quốc xã được hình thành vào năm 1933, dẫn tới Chiến tranh thế giới thứ hai và một nạn diệt chủng. Sau một giai đoạn Đồng Minh chiếm đóng, hai nước Đức được thành lập: Cộng hòa Liên bang Đức và Cộng hòa Dân chủ Đức. Năm 1990, quốc gia được tái thống nhất.",
+                value="Việc phát hiện Di cốt Mauer cho thấy rằng người cổ đại hiện diện tại Đức từ ít nhất là 600.000 năm trước. Các vũ khí săn bắn hoàn thiện cổ nhất được phát hiện trên thế giới nằm trong một mỏ than tại Schöningen, tại đó khai quật được ba chiếc lao bằng gỗ có niên đại 380.000 năm. Thung lũng Neandertal là địa điểm phát hiện di cốt người phi hiện đại đầu tiên từng biết đến; loài người mới này được gọi là Neanderthal. Các hóa thạch Neanderthal 1 được cho là có niên đại 40.000 năm tuổi. Bằng chứng về người hiện đại có niên đại tương tự được phát hiện trong các hang tại Dãy Schwäbische Alb gần Ulm. Trong những vật được tìm thấy có các sáo bằng xương chim và ngà voi ma mút 42.000 năm tuổi- là các nhạc cụ cổ nhất từng phát hiện được, Tượng người sư tử thời đại băng hà 40.000 năm tuổi là nghệ thuật tạo hình không thể tranh luận cổ nhất từng phát hiện được, và Tượng Venus ở Hohle Fels 35.000 năm tuổi là nghệ thuật tạo hình con người không thể tranh luận cổ nhất từng phát hiện được. Đĩa bầu trời Nebra là một đồ tạo tác bằng đồng điếu được tạo ra trong thời đại đồ đồng châu Âu được quy cho một địa điểm gần Nebra, Sachsen-Anhalt. Nó nằm trong Chương trình Ký ức Thế giới của UNESCO.",
                 label="Context",
                 lines=8
             ),
             gr.Textbox(
-                value="Chiến tranh thế giới thứ nhất và Cách mạng Đức 1918-1919",
+                value="Tượng người sư tử thời đại băng hà",
                 label="Answer",
                 lines=2
             ),
