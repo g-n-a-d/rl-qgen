@@ -10,7 +10,7 @@ Câu trả lời của bạn không nên chứa bất kỳ nội dung gây hại
 
 def make_prompt(context, answer, question=None, template=None):
     instruction = "### Hãy tạo Câu hỏi dựa trên Đoạn văn và Câu trả lời sau:"
-    prompt = instruction + " \n### Đoạn văn: " + context + " \n### Câu trả lời: " + answer + " \n### Câu hỏi:"
+    prompt = instruction + "\n### Đoạn văn: " + context + "\n### Câu trả lời: " + answer + "\n### Câu hỏi:"
     if template:
         prompt = CHAT_TEMPLATE[template].format(prompt)
     prompt += question if question else ""
