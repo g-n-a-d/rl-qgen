@@ -3,8 +3,8 @@
 accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/clm.py \
-    --model_name_or_path bigscience/bloomz-1b1 \
-    --torch_dtype float16 \
+    --model_name_or_path Viet-Mistral/Vistral-7B-Chat \
+    --torch_dtype bfloat16 \
     --use_peft True\
     --lora_r 32 \
     --lora_alpha 64 \
@@ -16,24 +16,26 @@ accelerate launch \
     --train_file ./data/processed/train.jsonl \
     --validation_file ./data/processed/dev.jsonl \
     --max_source_length 1024 \
+    --chat_template vistral \
+    --response_mark "[\INST]" \
     --output_dir ./outputs/ \
     --do_train \
     --do_eval \
     --evaluation_strategy steps \
-    --eval_steps 200 \
-    --fp16 \
-    --fp16_full_eval \
-    --per_device_train_batch_size 2 \
-    --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 8 \
+    --eval_steps 100 \
+    --bf16 \
+    --bfp16_full_eval \
+    --per_device_train_batch_size 1 \
+    --per_device_eval_batch_size 1 \
+    --gradient_accumulation_steps 16 \
     --learning_rate 1e-4 \
-    --num_train_epochs 5 \
+    --num_train_epochs 30 \
     --lr_scheduler_type cosine \
     --warmup_ratio 0.1 \
     --logging_strategy steps \
     --logging_steps 25 \
     --save_strategy steps \
-    --save_step 200 \
-    --save_total_limit 5 \
+    --save_step 100 \
+    --save_total_limit 30 \
     --load_best_model_at_end True \
     --report_to none

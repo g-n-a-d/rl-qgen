@@ -235,8 +235,15 @@ class DataTrainingArguments:
     source_prefix: Optional[str] = field(
         default=None, metadata={"help": "A prefix to add before every source text (useful for T5 models)."}
     )
-
-    response_template: Optional[str] = field(
+    chat_template: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "The chat template to apply."
+            )
+        },
+    )
+    response_mark: Optional[str] = field(
         default="### Câu hỏi:",
         metadata={
             "help": (

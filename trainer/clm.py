@@ -115,11 +115,13 @@ def main():
         inputs = []
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inp = tokenizer.bos_token + make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i]) + tokenizer.eos_token
+                inp = tokenizer.bos_token + \
+                    make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i], template=data_args.chat_tamplate) + \
+                    tokenizer.eos_token
                 inputs.append(inp)
 
         inputs = [prefix + inp for inp in inputs]
-        model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
+        model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True, add_special_tokens=False)
 
         return model_inputs
 
@@ -151,7 +153,7 @@ def main():
             desc="Running tokenizer on validation dataset",
         )
 
-    data_collator = DataCollatorForCompletionOnlyLM(tokenizer=tokenizer, response_template=data_args.response_template)
+    data_collator = DataCollatorForCompletionOnlyLM(tokenizer=tokenizer, response_template=data_args.response_mark)
 
 
     #################

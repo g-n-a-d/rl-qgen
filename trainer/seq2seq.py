@@ -265,7 +265,7 @@ def main():
         inputs, targets = [], []
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
-                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i], last_space=False))
+                inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i], template=data_args.chat_tamplate))
                 targets.append(examples[question_column][i])
 
         inputs = [prefix + inp for inp in inputs]
