@@ -23,8 +23,6 @@ accelerate launch \
     --do_eval \
     --evaluation_strategy steps \
     --eval_steps 100 \
-    --bf16 \
-    --bfp16_full_eval \
     --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 16 \
@@ -38,4 +36,6 @@ accelerate launch \
     --save_step 100 \
     --save_total_limit 30 \
     --load_best_model_at_end True \
+    --bf16 \
+    --bfp16_full_eval \
     --report_to none

@@ -116,7 +116,7 @@ def main():
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
                 inp = tokenizer.bos_token + \
-                    make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i], template=data_args.chat_tamplate) + \
+                    make_prompt(examples[context_column][i], examples[answer_column][i], examples[question_column][i], template=data_args.chat_template) + \
                     tokenizer.eos_token
                 inputs.append(inp)
 
