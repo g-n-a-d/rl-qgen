@@ -82,8 +82,8 @@ with distributed_state.split_between_processes(text) as text_:
         print(outputs)
         results.extend(outputs)
 
-print(results)
 results_gathered=gather_object(results)
+print(results)
 
 with jsonlines.open(args.output_filename, mode="w") as fw:
     for i in range(len(text)):
