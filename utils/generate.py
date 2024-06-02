@@ -79,8 +79,10 @@ with distributed_state.split_between_processes(text) as text_:
             top_p=args.top_p,
         )
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
+        print(outputs)
         results.extend(outputs)
 
+print(results)
 results_gathered=gather_object(results)
 
 with jsonlines.open(args.output_filename, mode="w") as fw:
