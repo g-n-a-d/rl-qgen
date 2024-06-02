@@ -51,8 +51,8 @@ if not config.is_encoder_decoder:
         args.model_name_or_path,
         token=args.token,
         torch_dtype=getattr(torch, args.torch_dtype),
-        # quantization_config=nf4_config
-    ).to(distributed_state.device)
+        quantization_config=nf4_config
+    )#.to(distributed_state.device)
 else:
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name_or_path)
 if args.adapter_name_or_path:
@@ -66,7 +66,7 @@ with jsonlines.open(args.test_filename, mode="r") as fr:
 rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
 with distributed_state.split_between_processes(text) as text_:
     results = []
-    for i in tqdm(range(0, len(text_), args.gen_batch_size), desc ="Generating:"):
+    for i in tqdm(range(0, len(text_), args.gen_batch_size), desc ="Generating"):
         inputs = [tokenizer.bos_token + make_prompt(text_[i + ii]["context"], text_[i + ii]["answer"], template=None) for ii in range(min(args.gen_batch_size, len(text_) - i))] 
         input_ids = tokenizer(inputs, max_length=args.max_seq_length, padding=True, truncation=True, return_tensors="pt").to(device)
         preds = model.generate(
