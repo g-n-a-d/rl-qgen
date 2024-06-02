@@ -25,7 +25,7 @@ parser.add_argument("--token", type=str, default=None, help="Token")
 parser.add_argument("--gen_batch_size", type=int, default=8, help="Evaluation batch size")
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
 parser.add_argument("--max_seq_length", type=int, default=1024, help="Max seq length")
-parser.add_argument("--response_mark", type=str, default=["### Câu hỏi:"], help="String which separate query and response")
+parser.add_argument("--response_mark", type=str, default="### Câu hỏi:", help="String which separate query and response")
 parser.add_argument("--min_new_tokens", type=int, default=1)
 parser.add_argument("--max_new_tokens", type=int, default=32)
 parser.add_argument("--do_sample", type=bool, default=False)
@@ -79,25 +79,24 @@ with distributed_state.split_between_processes(text) as text_:
             top_p=args.top_p,
         )
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        print(outputs)
         results.extend(outputs)
 
 results_gathered=gather_object(results)
-print(results_gathered)
 
-with jsonlines.open(args.output_filename, mode="w") as fw:
-    for i in range(len(text)):
-        line_ = {}
-        line_["context"] = text[i]["context"]
-        line_["answer"] = text[i]["answer"]
-        line_["target"] = text[i]["question"]
-        if not model.config.is_encoder_decoder:
-            pred = results_gathered[i].split(args.response_mark)
-            if len(pred) == 2:
-                line_["pred"] = pred[1].strip()
-                fw.write(line_)
+if distributed_state.is_local_main_process:
+    with jsonlines.open(args.output_filename, mode="w") as fw:
+        for i in range(len(text)):
+            line_ = {}
+            line_["context"] = text[i]["context"]
+            line_["answer"] = text[i]["answer"]
+            line_["target"] = text[i]["question"]
+            if not model.config.is_encoder_decoder:
+                pred = results_gathered[i].split(args.response_mark)
+                if len(pred) == 2:
+                    line_["pred"] = pred[1].strip()
+                    fw.write(line_)
+                else:
+                    pass
             else:
-                pass
-        else:
-            line_["pred"] = results_gathered[i]
-            fw.write(line_)
+                line_["pred"] = results_gathered[i]
+                fw.write(line_)
