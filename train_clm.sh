@@ -4,6 +4,7 @@ accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/clm.py \
     --model_name_or_path Viet-Mistral/Vistral-7B-Chat \
+    --token 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 \
     --torch_dtype bfloat16 \
     --use_peft True\
     --lora_r 32 \
@@ -34,7 +35,7 @@ accelerate launch \
     --logging_steps 10 \
     --save_strategy steps \
     --save_step 50 \
-    --save_total_limit 17 \
+    --save_total_limit 25 \
     --load_best_model_at_end True \
     --bf16 \
     --report_to none
