@@ -64,7 +64,7 @@ with jsonlines.open(args.test_filename, mode="r") as fr, jsonlines.open(args.out
     rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
     with distributed_state.split_between_processes(text) as text_:
         for i in tqdm(range(0, len(text_), args.gen_batch_size), desc ="Generating:"):
-            inputs = [tokenizer.bos_token + make_prompt(text_[i + ii]["context"], text_[i + ii]["answer"], last_space=False) for ii in range(min(args.gen_batch_size, len(text_) - i))] 
+            inputs = [tokenizer.bos_token + make_prompt(text_[i + ii]["context"], text_[i + ii]["answer"], template=None) for ii in range(min(args.gen_batch_size, len(text_) - i))] 
             input_ids = tokenizer(inputs, max_length=args.max_seq_length, padding=True, truncation=True, return_tensors="pt").to(device)
             preds = model.generate(
                 **input_ids,
