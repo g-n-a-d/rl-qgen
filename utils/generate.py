@@ -3,10 +3,8 @@ from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
     AutoModelForSeq2SeqLM,
-    AutoTokenizer,
-    BitsAndBytesConfig
+    AutoTokenizer
 )
-from peft import LoraConfig, get_peft_model
 from accelerate import PartialState
 from accelerate.utils import gather_object
 import jsonlines
@@ -42,18 +40,11 @@ distributed_state = PartialState()
 tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, token=args.token)
 config = AutoConfig.from_pretrained(args.model_name_or_path, token=args.token)
 if not config.is_encoder_decoder:
-    nf4_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_compute_dtype=args.torch_dtype
-    )
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path,
         token=args.token,
         torch_dtype=getattr(torch, args.torch_dtype),
-        quantization_config=nf4_config
-    )#.to(distributed_state.device)
+    ).to(distributed_state.device)
 else:
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name_or_path)
 if args.adapter_name_or_path:
