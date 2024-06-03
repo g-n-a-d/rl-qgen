@@ -1,22 +1,41 @@
 import jsonlines
 from rouge_score import rouge_scorer
+import evaluate
+from bert_score import score
 import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--eval_filename", type=str, default="./pred.jsonl", help="Evaluation filename formatted in jsonl")
 args = parser.parse_args()
 
-scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
+rouge = evaluate.load('rouge')
+# bleu = evaluate.load('bleu')
 
-rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
+target, pred = [], []
+
 with jsonlines.open(args.eval_filename, mode="r") as f:
     for line in f:
-        score = scorer.score(line["target"], line["pred"])
-        rougeL_pre.append(score["rougeL"].precision)
-        rougeL_rec.append(score["rougeL"].recall)
-        rougeL_f1.append(score["rougeL"].fmeasure)
+        target.append(line["target"])
+        pred.append(line["pred"])
 
-print("#### Overall Mean Rouge-L Scores ####")
-print('Precision: {:.4f}'.format(sum(rougeL_pre)/len(rougeL_pre)))
-print('Recall: {:.4f}'.format(sum(rougeL_rec)/len(rougeL_pre)))
-print('F1 score: {:.4f}'.format(sum(rougeL_f1)/len(rougeL_f1)))
+rouge_score = rouge.compute(predictions=pred, references=target)
+# bleu_score = 
+bs_pre, bs_rec, bs_f1 = score(pred, target, lang="vi", verbose=True)
+
+print("#### Overall Mean Scores ####")
+print("+++++++++++++++++")
+print("Rouge")
+print("Rouge1: {:.2f}".format(100*rouge_score["rouge1"]))
+print("Rouge2: {:.2f}".format(100*rouge_score["rouge2"]))
+print("RougeL: {:.2f}".format(100*rouge_score["rougeL"]))
+# print("+++++++++++++++++")
+# print("Bleu-4")
+# print('Precision: {:.4f}'.format(100*sum(bleu_pre)/len(bleu_pre)))
+# print('Recall: {:.4f}'.format(100*sum(bleu_rec)/len(bleu_pre)))
+# print('F1 score: {:.4f}'.format(100*sum(bleu_f1)/len(bleu_f1)))
+print("+++++++++++++++++")
+print("BERTScore")
+print('Precision: {:.2f}'.format(100*bs_pre))
+print('Recall: {:.2f}'.format(100*bs_rec))
+print('F1 score: {:.2f}'.format(100*bs_f1))
+print("+++++++++++++++++")
