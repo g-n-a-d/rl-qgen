@@ -19,9 +19,9 @@ from data_utils import make_prompt
 parser = argparse.ArgumentParser()
 parser.add_argument("--test_filename", type=str, help="Test file")
 parser.add_argument("--model_name_or_path", type=str, help="Model")
+parser.add_argument("--token", type=str, default=None, help="Token")
 parser.add_argument("--torch_dtype", type=str, default="float32", help="DataType")
 parser.add_argument("--adapter_name_or_path", type=str, default=None, help="Adapter")
-parser.add_argument("--token", type=str, default=None, help="Token")
 parser.add_argument("--gen_batch_size", type=int, default=8, help="Evaluation batch size")
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
 parser.add_argument("--max_seq_length", type=int, default=1024, help="Max seq length")
@@ -79,6 +79,7 @@ with distributed_state.split_between_processes(text) as text_:
             top_k=args.top_k,
             top_p=args.top_p,
         )
+        print(preds)
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
         results.extend(outputs)
 
