@@ -79,8 +79,8 @@ with distributed_state.split_between_processes(text) as text_:
             top_k=args.top_k,
             top_p=args.top_p,
         )
-        print(preds)
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
+        print(outputs)
         results.extend(outputs)
 
 results_gathered=gather_object(results)
