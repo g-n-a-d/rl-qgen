@@ -21,6 +21,7 @@ with jsonlines.open(args.eval_filename, mode="r") as f:
 rouge_score = rouge.compute(predictions=pred, references=target)
 # bleu_score = 
 bs_pre, bs_rec, bs_f1 = score(pred, target, lang="vi", verbose=True)
+print(bs_pre, bs_rec, bs_f1)
 
 print("#### Overall Mean Scores ####")
 print("+++++++++++++++++")
@@ -35,7 +36,7 @@ print("RougeL: {:.2f}".format(100*rouge_score["rougeL"]))
 # print('F1 score: {:.4f}'.format(100*sum(bleu_f1)/len(bleu_f1)))
 print("+++++++++++++++++")
 print("BERTScore")
-print('Precision: {:.2f}'.format(100*bs_pre))
-print('Recall: {:.2f}'.format(100*bs_rec))
-print('F1 score: {:.2f}'.format(100*bs_f1))
+print("Precision: {:.2f}".format(100*bs_pre))
+print("Recall: {:.2f}".format(100*bs_rec))
+print("F1 score: {:.2f}".format(100*bs_f1))
 print("+++++++++++++++++")
