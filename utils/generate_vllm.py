@@ -13,7 +13,6 @@ parser.add_argument("--num_processes", type=int, default=1, help="Number of proc
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
 parser.add_argument("--max_seq_length", type=int, default=1024, help="Max input length")
 parser.add_argument("--template", type=str, default=None, help="Template")
-parser.add_argument("--response_mark", type=str, default="### Câu hỏi:", help="String which separate query and response")
 parser.add_argument("--min_new_tokens", type=int, default=1)
 parser.add_argument("--max_new_tokens", type=int, default=32)
 parser.add_argument("--do_beam_search", type=bool, default=False)
@@ -55,9 +54,5 @@ with jsonlines.open(args.output_filename, mode="w") as fw:
         line_["context"] = text[i]["context"]
         line_["answer"] = text[i]["answer"]
         line_["target"] = text[i]["question"]
-        pred = results[i].split(args.response_mark)
-        if len(pred) == 2:
-            line_["pred"] = pred[1].strip()
-            fw.write(line_)
-        else:
-            pass
+        line_["pred"] = results[i].strip()
+        fw.write(line_)

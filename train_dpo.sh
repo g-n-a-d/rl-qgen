@@ -10,8 +10,8 @@ accelerate launch \
     --lora_alpha 32 \
     --load_in_4bit True \
     --use_bnb_nested_quant True \
-    --train_file ./data/processed/pairs.jsonl \
-    --validation_file ./data/processed/eval.jsonl \
+    --train_file ./data/pairs.jsonl \
+    --validation_file ./data/eval.jsonl \
     --output_dir ./outputs/ \
     --evaluation_strategy steps \
     --eval_steps 50 \
