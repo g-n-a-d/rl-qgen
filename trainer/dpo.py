@@ -81,12 +81,15 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
+    quantization_config = get_quantization_config(model_args)
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
+        torch_dtype=getattr(torch, model_args.torch_dtype),
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
+        quantization_config=quantization_config,
     )
     model_ref = None
 

@@ -4,7 +4,7 @@ accelerate launch \
     --config_file ./config/multi_gpu.yaml \
     ./trainer/clm.py \
     --model_name_or_path Viet-Mistral/Vistral-7B-Chat \
-    --token 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 \
+    --token ... \
     --torch_dtype bfloat16 \
     --use_peft True\
     --lora_r 32 \
@@ -30,7 +30,7 @@ accelerate launch \
     --learning_rate 2e-5 \
     --num_train_epochs 5 \
     --lr_scheduler_type cosine \
-    --warmup_ratio 0.1 \
+    --warmup_steps 8 \
     --logging_strategy steps \
     --logging_steps 10 \
     --save_strategy steps \

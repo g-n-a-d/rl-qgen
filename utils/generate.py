@@ -27,13 +27,12 @@ parser.add_argument("--template", type=str, default=None, help="Template")
 parser.add_argument("--response_mark", type=str, default="### Câu hỏi:", help="String which separate query and response")
 parser.add_argument("--min_new_tokens", type=int, default=1)
 parser.add_argument("--max_new_tokens", type=int, default=32)
+parser.add_argument("--num_beams", type=int, default=1)
 parser.add_argument("--do_sample", type=bool, default=False)
 parser.add_argument("--temperature", type=float, default=1.0)
 parser.add_argument("--top_k", type=int, default=50)
 parser.add_argument("--top_p", type=float, default=1.0)
 args = parser.parse_args()
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 distributed_state = PartialState()
 
@@ -54,17 +53,17 @@ with jsonlines.open(args.test_filename, mode="r") as fr:
     text = []
     for line in fr:
         text.append(line)
-    
-rougeL_pre, rougeL_rec, rougeL_f1 = [], [], []
+
 with distributed_state.split_between_processes(text) as text_:
     results = []
     for i in tqdm(range(0, len(text_), args.gen_batch_size), desc ="Generating"):
         inputs = [tokenizer.bos_token + make_prompt(text_[i + ii]["context"], text_[i + ii]["answer"], template=args.template) for ii in range(min(args.gen_batch_size, len(text_) - i))] 
-        input_ids = tokenizer(inputs, max_length=args.max_seq_length, padding=True, truncation=True, return_tensors="pt").to(device)
+        input_ids = tokenizer(inputs, max_length=args.max_seq_length, padding=True, truncation=True, return_tensors="pt").to(distributed_state.device)
         preds = model.generate(
             **input_ids,
             min_new_tokens=args.min_new_tokens,
             max_new_tokens=args.max_new_tokens,
+            num_beams=args.num_beams,
             do_sample=args.do_sample,
             temperature=args.temperature,
             top_k=args.top_k,
