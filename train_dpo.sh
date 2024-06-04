@@ -30,4 +30,5 @@ accelerate launch \
     --load_best_model_at_end True \
     --bf16 \
     --report_to none \
-    --no_remove_unused_columns
+    --no_remove_unused_columns \
+    --generate_during_eval True
