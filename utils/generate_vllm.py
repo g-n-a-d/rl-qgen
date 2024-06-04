@@ -11,13 +11,13 @@ parser.add_argument("--dtype", type=str, default="float32", help="DataType")
 parser.add_argument("--adapter_name_or_path", type=str, default=None, help="Adapter")
 parser.add_argument("--num_processes", type=int, default=1, help="Number of processes")
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
-parser.add_argument("--max_seq_length", type=int, default=1088, help="Max input length")
+parser.add_argument("--max_seq_length", type=int, default=1024, help="Max input length")
 parser.add_argument("--template", type=str, default=None, help="Template")
 parser.add_argument("--response_mark", type=str, default="### Câu hỏi:", help="String which separate query and response")
 parser.add_argument("--min_new_tokens", type=int, default=1)
 parser.add_argument("--max_new_tokens", type=int, default=32)
-parser.add_argument("--num_beams", type=int, default=1)
 parser.add_argument("--do_beam_search", type=bool, default=False)
+parser.add_argument("--num_beams", type=int, default=1)
 parser.add_argument("--temperature", type=float, default=1.0)
 parser.add_argument("--top_k", type=int, default=-1)
 parser.add_argument("--top_p", type=float, default=1.0)
@@ -27,7 +27,7 @@ args = parser.parse_args()
 llm = LLM(
     model=args.model_name_or_path,
     tensor_parallel_size=args.num_processes,
-    dtype=args.model_name_or_path.dtype,
+    dtype=args.dtype,
     max_model_len=args.max_seq_length + args.max_new_tokens
 )
 
