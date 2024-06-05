@@ -1,4 +1,5 @@
 from vllm import LLM, SamplingParams
+from vllm.lora.request import LoRARequest
 import jsonlines
 import argparse
 
@@ -8,7 +9,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test_filename", type=str, help="Test file")
 parser.add_argument("--model_name_or_path", type=str, help="Model")
 parser.add_argument("--dtype", type=str, default="float32", help="DataType")
-parser.add_argument("--adapter_name_or_path", type=str, default=None, help="Adapter")
 parser.add_argument("--num_processes", type=int, default=1, help="Number of processes")
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
 parser.add_argument("--max_seq_length", type=int, default=1024, help="Max input length")
@@ -46,7 +46,12 @@ with jsonlines.open(args.test_filename, mode="r") as fr:
         text.append(line)
 text_ = ["<s>" + make_prompt(l["context"], l["answer"], template=args.template) for l in text]
 
-results = list(map(lambda x: x.outputs[0].text, llm.generate(text_, sampling_params)))
+results = list(
+    map(lambda x: x.outputs[0].text, llm.generate(
+        text_,
+        sampling_params
+    ))
+)
 
 with jsonlines.open(args.output_filename, mode="w") as fw:
     for i in range(len(text)):

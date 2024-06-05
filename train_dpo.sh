@@ -10,15 +10,15 @@ accelerate launch \
     --lora_alpha 32 \
     --load_in_4bit True \
     --use_bnb_nested_quant True \
-    --train_file ./data/pairs.jsonl \
-    --validation_file ./data/eval.jsonl \
+    --train_file ./data/pairs_train.jsonl \
+    --validation_file ./data/pairs_eval.jsonl \
     --output_dir ./outputs/ \
     --evaluation_strategy steps \
     --eval_steps 50 \
-    --per_device_train_batch_size 2 \
-    --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 8 \
-    --learning_rate 5e-7 \
+    --per_device_train_batch_size 1 \
+    --per_device_eval_batch_size 1 \
+    --gradient_accumulation_steps 16 \
+    --learning_rate 2.5e-6 \
     --num_train_epochs 2 \
     --lr_scheduler_type cosine \
     --warmup_steps 8 \
@@ -31,4 +31,4 @@ accelerate launch \
     --bf16 \
     --report_to none \
     --no_remove_unused_columns \
-    --generate_during_eval True
+    --beta 0.1

@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test_filename", type=str, help="Test file")
 parser.add_argument("--model_name_or_path", type=str, help="Model")
 parser.add_argument("--token", type=str, default=None, help="Token")
-parser.add_argument("--torch_dtype", type=str, default="float32", help="DataType")
+parser.add_argument("--dtype", type=str, default="float32", help="DataType")
 parser.add_argument("--adapter_name_or_path", type=str, default=None, help="Adapter")
 parser.add_argument("--gen_batch_size", type=int, default=8, help="Evaluation batch size")
 parser.add_argument("--output_filename", type=str, default="./output.jsonl", help="Ouput")
@@ -42,7 +42,7 @@ if not config.is_encoder_decoder:
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path,
         token=args.token,
-        torch_dtype=getattr(torch, args.torch_dtype),
+        torch_dtype=getattr(torch, args.dtype),
     ).to(distributed_state.device)
 else:
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name_or_path)
@@ -70,7 +70,6 @@ with distributed_state.split_between_processes(text) as text_:
             top_p=args.top_p,
         )
         outputs = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        print(outputs)
         results.extend(outputs)
 
 results_gathered=gather_object(results)

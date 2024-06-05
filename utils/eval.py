@@ -23,7 +23,7 @@ rouge_score = rouge.compute(predictions=pred, references=target)
 print("Calculating BLEU score...")
 bleu_score = bleu.compute(predictions=pred, references=target)
 print("Calculating BERTScore...")
-bs_pre, bs_rec, bs_f1 = score(pred, target, lang="vi", verbose=True)
+bs_pre, bs_rec, bs_f1 = score(pred, target, lang="vi", model_type="xlm-roberta-large", verbose=True)
 
 print("#### Overall Mean Scores ####")
 print("+++++++++++++++++")
