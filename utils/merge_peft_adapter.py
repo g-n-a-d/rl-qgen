@@ -7,7 +7,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str)
     parser.add_argument("--adapter_name_or_path", type=str)
-    parser.add_argument("--output_dir", type=str, defaul=None)
+    parser.add_argument("--output_dir", type=str, default=None)
     parser.add_argument("--dtype", type=str, default="float32")
     parser.add_argument("--push_to_hub", action="store_true")
 

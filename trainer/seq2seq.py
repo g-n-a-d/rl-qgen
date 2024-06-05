@@ -266,7 +266,7 @@ def main():
         for i in range(len(examples[context_column])):
             if examples[context_column][i] and examples[answer_column][i] and examples[question_column][i]:
                 inputs.append(make_prompt(examples[context_column][i], examples[answer_column][i], template=data_args.chat_tamplate))
-                targets.append(examples[question_column][i])
+                targets.append(examples[question_column][i] + tokenizer.bos_token)
 
         inputs = [prefix + inp for inp in inputs]
         model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, padding=padding, truncation=True)
