@@ -18,7 +18,7 @@ accelerate launch \
     --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 16 \
-    --learning_rate 2.5e-6 \
+    --learning_rate 5e-7 \
     --num_train_epochs 2 \
     --lr_scheduler_type cosine \
     --warmup_steps 8 \
