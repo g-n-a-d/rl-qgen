@@ -289,11 +289,7 @@ class GenerationArguments:
     )
 
     do_sample: bool = field(
-        default=False, metadata={"help": "whether to do sample"}
-    )
-
-    temperature: Optional[float] = field(
-        default=1.0, metadata={"help": "the temperature parameter"}
+        default=True, metadata={"help": "whether to do sample"}
     )
 
     top_k: Optional[int] = field(
@@ -302,6 +298,10 @@ class GenerationArguments:
 
     top_p: Optional[float] = field(
         default=1.0, metadata={"help": "the top_p parameter"}
+    )
+
+    temperature: Optional[float] = field(
+        default=1.0, metadata={"help": "the temperature parameter"}
     )
 
     def to_dict(self):

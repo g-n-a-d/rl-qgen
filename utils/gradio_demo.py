@@ -6,40 +6,40 @@ import gradio as gr
 from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM, AutoModelForSeq2SeqLM, HfArgumentParser
 import argparse
 
-from trainer.arguments import ModelArguments
+from trainer.arguments import ModelArguments, DataTrainingArguments, GenerationArguments
 from data_utils import make_prompt
 
 def load_args():
-    parser = HfArgumentParser(ModelArguments)
-    model_args, = parser.parse_args_into_dataclasses()
+    parser = HfArgumentParser(ModelArguments, DataTrainingArguments, GenerationArguments)
+    model_args, data_args, gen_args = parser.parse_args_into_dataclasses()
     
-    return model_args
+    return model_args, data_args, gen_args
 
 def load_model(model_args):
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, token=model_args.token)  
     config = AutoConfig.from_pretrained(model_args.model_name_or_path)
     if not config.is_encoder_decoder:
-        model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path)
+        model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, device_map="auto")
     else:
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_args.model_name_or_path)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_args.model_name_or_path, device_map="auto")
     if model_args.adapter_name_or_path:
         model.load_adapter(model_args.adapter_name_or_path)
 
     return model, tokenizer
 
-def infer(model, tokenizer, context, answer):
+def infer(model, tokenizer, context, answer, response_mark, gen_args):
     prompt = make_prompt(context=context, answer=answer, last_space=False)
     inputs = tokenizer(prompt, return_tensors="pt")
-    preds = model.generate(**inputs, do_sample=True, min_new_tokens=1, max_new_tokens=32)
+    preds = model.generate(**inputs, **gen_args.to_dict())
     if not model.config.is_encoder_decoder:
-        output = tokenizer.decode(preds[0], skip_special_tokens=True, clean_up_tokenization_spaces=True).split("### Câu hỏi: ")[1]
+        output = tokenizer.decode(preds[0], skip_special_tokens=True, clean_up_tokenization_spaces=True).split(response_mark)[1]
     else:
         output = tokenizer.decode(preds[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
     
     return output
 
 def run_demo():
-    model_args = load_args()
+    model_args, data_args, gen_args = load_args()
 
     model, tokenizer = load_model(model_args)
     pipe = lambda context, answer: infer(
@@ -47,6 +47,8 @@ def run_demo():
         tokenizer=tokenizer,
         context=context,
         answer=answer,
+        response_mark=data_args.response_mark,
+        gen_args=gen_args
     )
 
     demo = gr.Interface(

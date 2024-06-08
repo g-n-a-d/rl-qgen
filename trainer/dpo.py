@@ -127,8 +127,10 @@ def main():
             token=model_args.token,
         )
 
-    train_dataset = dataset["train"]
-    eval_dataset = dataset["validation"]
+    if "train" in dataset.column_names:
+        train_dataset = dataset["train"]
+    if "validation" in dataset.column_names:
+        eval_dataset = dataset["validation"]
 
 
     #################
