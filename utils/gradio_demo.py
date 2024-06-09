@@ -2,14 +2,17 @@ import os
 import sys
 sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
 
-import gradio as gr
+import torch
 from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM, AutoModelForSeq2SeqLM, HfArgumentParser
+import gradio as gr
 
 from trainer.arguments import ModelArguments, DataTrainingArguments, GenerationArguments
 from data_utils import make_prompt
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def load_args():
-    parser = HfArgumentParser(ModelArguments, DataTrainingArguments, GenerationArguments)
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, GenerationArguments))
     model_args, data_args, gen_args = parser.parse_args_into_dataclasses()
     
     return model_args, data_args, gen_args
@@ -18,17 +21,17 @@ def load_model(model_args):
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, token=model_args.token)  
     config = AutoConfig.from_pretrained(model_args.model_name_or_path)
     if not config.is_encoder_decoder:
-        model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, device_map="auto")
+        model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, torch_dtype=getattr(torch, model_args.torch_dtype)).to(device)
     else:
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_args.model_name_or_path, device_map="auto")
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_args.model_name_or_path, torch_dtype=getattr(torch, model_args.torch_dtype)).to(device)
     if model_args.adapter_name_or_path:
         model.load_adapter(model_args.adapter_name_or_path)
 
     return model, tokenizer
 
 def infer(model, tokenizer, context, answer, data_args, gen_args):
-    prompt = make_prompt(context=context, answer=answer, template=data_args.template)
-    inputs = tokenizer(prompt, return_tensors="pt")
+    prompt = make_prompt(context=context, answer=answer, template=data_args.chat_template)
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
     preds = model.generate(**inputs, **gen_args.to_dict())
     if not model.config.is_encoder_decoder:
         output = tokenizer.decode(preds[0], skip_special_tokens=True, clean_up_tokenization_spaces=True).split(data_args.response_mark)[1]

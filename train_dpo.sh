@@ -13,10 +13,9 @@ accelerate launch \
     --train_file ./data/pairs_train.jsonl \
     --beta 0.1 \
     --output_dir ./outputs/ \
-    --eval_steps 50 \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 16 \
-    --learning_rate 5e-7 \
+    --learning_rate 1e-6 \
     --num_train_epochs 2 \
     --lr_scheduler_type cosine \
     --warmup_steps 8 \
