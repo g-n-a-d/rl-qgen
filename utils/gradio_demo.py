@@ -4,7 +4,6 @@ sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], os.pardir)))
 
 import gradio as gr
 from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM, AutoModelForSeq2SeqLM, HfArgumentParser
-import argparse
 
 from trainer.arguments import ModelArguments, DataTrainingArguments, GenerationArguments
 from data_utils import make_prompt
@@ -27,12 +26,12 @@ def load_model(model_args):
 
     return model, tokenizer
 
-def infer(model, tokenizer, context, answer, response_mark, gen_args):
-    prompt = make_prompt(context=context, answer=answer, last_space=False)
+def infer(model, tokenizer, context, answer, data_args, gen_args):
+    prompt = make_prompt(context=context, answer=answer, template=data_args.template)
     inputs = tokenizer(prompt, return_tensors="pt")
     preds = model.generate(**inputs, **gen_args.to_dict())
     if not model.config.is_encoder_decoder:
-        output = tokenizer.decode(preds[0], skip_special_tokens=True, clean_up_tokenization_spaces=True).split(response_mark)[1]
+        output = tokenizer.decode(preds[0], skip_special_tokens=True, clean_up_tokenization_spaces=True).split(data_args.response_mark)[1]
     else:
         output = tokenizer.decode(preds[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
     
@@ -47,7 +46,7 @@ def run_demo():
         tokenizer=tokenizer,
         context=context,
         answer=answer,
-        response_mark=data_args.response_mark,
+        data_args=data_args,
         gen_args=gen_args
     )
 
