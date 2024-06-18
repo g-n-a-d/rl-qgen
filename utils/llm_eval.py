@@ -77,6 +77,21 @@ def api_call(input):
 
     return output
 
+def get_win_rate(results):
+    target_score = 0
+    pred_score = 0
+    for line in results:
+        if line["target"] != line["pred"]:
+            try:
+                if line["preference"]["candidates"][0]["content"]["parts"][0]["text"].find("1") != -1:
+                    target_score += 1
+                elif line["preference"]["candidates"][0]["content"]["parts"][0]["text"].find("2") != -1:
+                    pred_score += 1
+            except:
+                pass
+
+    return 100*pr/(pr + tg)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--eval_filename", type=str, default="./pred.jsonl", help="Evaluation filename formatted in jsonl")
@@ -96,6 +111,7 @@ def main():
         for result in results:
             fw.write(result)
 
+    print(f"Win rate: {get_win_rate(results)}")
 
 if __name__ == "__main__":
     main()
