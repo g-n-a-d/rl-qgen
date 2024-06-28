@@ -25,7 +25,7 @@ KEY = [
 ]
 
 GENERATION_COONFIG = {
-    "topK": 1,
+    "temperature": 0.0,
     "candidateCount": 1,
     "maxOutputTokens": 32
 }
