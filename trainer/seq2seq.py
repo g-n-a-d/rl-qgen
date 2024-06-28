@@ -11,6 +11,7 @@ import numpy as np
 from datasets import load_dataset
 from filelock import FileLock
 
+import torch
 import transformers
 from transformers import (
     AutoConfig,
@@ -158,13 +159,6 @@ def main():
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-    config = AutoConfig.from_pretrained(
-        model_args.config_name if model_args.config_name else model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        revision=model_args.model_revision,
-        token=model_args.token,
-        trust_remote_code=model_args.trust_remote_code,
-    )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -175,8 +169,8 @@ def main():
     )
     model = AutoModelForSeq2SeqLM.from_pretrained(
         model_args.model_name_or_path,
+        torch_dtype=getattr(torch, model_args.torch_dtype),
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         token=model_args.token,
