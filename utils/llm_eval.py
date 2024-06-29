@@ -106,7 +106,7 @@ def main():
             inputs.append(line)
 
     if args.target_filename:
-        with jsonlines.open(args.eval_filename, mode="r") as fr:
+        with jsonlines.open(args.target_filename, mode="r") as fr:
             for i, line in enumerate(fr):
                 inputs[i]["target"] = line["pred"]
 
