@@ -21,7 +21,7 @@ So sánh 2 câu hỏi dựa trên một số tiêu chí sau:
 In ra duy nhất một chữ số là số hiệu của câu hỏi được đánh giá cao hơn."""
 
 KEY = [
-    "AIzaSyCGxkmG0zyVrSDBe-fg2TqKvCHPW459uv0"
+    ""
 ]
 
 GENERATION_COONFIG = {
