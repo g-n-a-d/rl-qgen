@@ -21,7 +21,7 @@ So sánh 2 câu hỏi dựa trên một số tiêu chí sau:
 In ra duy nhất một chữ số là số hiệu của câu hỏi được đánh giá cao hơn."""
 
 KEY = [
-    ""
+    "AIzaSyDFI3BzQuzfOC87b4aycOYk5kf_MWqKrXk"
 ]
 
 GENERATION_COONFIG = {
@@ -101,7 +101,7 @@ def main():
     args = parser.parse_args()
 
     inputs = []
-    with jsonlines.open(args.eval_filename, mode="r") as fr:
+    with jsonlines.open(args.pred_filename, mode="r") as fr:
         for line in fr:
             inputs.append(line)
 
