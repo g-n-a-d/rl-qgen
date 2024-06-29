@@ -94,7 +94,8 @@ def get_win_rate(results):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--eval_filename", type=str, default="./pred.jsonl", help="Evaluation filename formatted in jsonl")
+    parser.add_argument("--pred_filename", type=str, default="./pred.jsonl", help="Prediction filename formatted in jsonl")
+    parser.add_argument("--target_filename", type=str, default=None, help="Prediction filename for cross evaluation if specified")
     parser.add_argument("--response_filename", type=str, default="./response.jsonl", help="Response filename formatted in jsonl")
     parser.add_argument("--num_processes", type=int, default=4, help="Number of processes")
     args = parser.parse_args()
@@ -103,6 +104,11 @@ def main():
     with jsonlines.open(args.eval_filename, mode="r") as fr:
         for line in fr:
             inputs.append(line)
+
+    if args.target_filename:
+        with jsonlines.open(args.eval_filename, mode="r") as fr:
+            for i, line in enumerate(fr):
+                inputs[i]["target"] = line["pred"]
 
     with Pool(processes=args.num_processes) as pool:
         results = pool.map(api_call, inputs)
